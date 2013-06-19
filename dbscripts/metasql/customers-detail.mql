@@ -10,6 +10,7 @@ SELECT DISTINCT ON ( cust_number )
   custtype_code,
   bill_cntct.cntct_first_name AS bill_first_name,
   bill_cntct.cntct_last_name AS bill_last_name,
+  bill_cntct.cntct_title AS bill_title,
   bill_cntct.cntct_phone AS bill_phone,
   bill_cntct.cntct_fax AS bill_fax,
   bill_cntct.cntct_email AS bill_email,
