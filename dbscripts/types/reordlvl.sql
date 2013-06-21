@@ -12,4 +12,4 @@ CREATE TYPE reordlvl AS (
     reordlvl_curr_level 	numeric,
     reordlvl_total_days 	numeric,
     reordlvl_total_usage	numeric,
-    reordlvl_calc_level 	numeric );
+    reordlvl_calc_level 	integer );
