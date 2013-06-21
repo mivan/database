@@ -73,7 +73,13 @@ BEGIN
              _r.cohead_shipto_id,pNEW.qty_ordered,_r.cohead_curr_id,_r.cohead_orderdate)),
     COALESCE(getUomId(pNEW.price_uom),_r.item_price_uom_id),
     itemuomtouomratio(_r.item_id,COALESCE(getUomId(pNEW.price_uom),_r.item_price_uom_id),_r.item_price_uom_id),
-    itemPrice(_r.item_id,_r.cohead_cust_id,_r.cohead_shipto_id,pNEW.qty_ordered,_r.cohead_curr_id,_r.cohead_orderdate),
+    itemPrice(_r.item_id, _r.cohead_cust_id, _r.cohead_shipto_id,
+              pNEW.qty_ordered, _r.item_inv_uom_id, _r.item_price_uom_id,
+              _r.cohead_curr_id,_r.cohead_orderdate,
+              CASE WHEN (fetchMetricText('soPriceEffective') = 'ScheduleDate') THEN pNEW.scheduled_date
+                   WHEN (fetchMetricText('soPriceEffective') = 'OrderDate') THEN _r.cohead_orderdate
+                   ELSE CURRENT_DATE END,
+              NULL)
     -1,
     pNEW.notes,
     true,
