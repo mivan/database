@@ -11,7 +11,7 @@ DECLARE
   _usage NUMERIC;
   _totalUsage NUMERIC;
   _totalDays INTEGER;
-  _reorderLevel NUMERIC;
+  _reorderLevel INTEGER;
   _averageUsage NUMERIC;
   _result	TEXT;
 
@@ -77,7 +77,7 @@ DECLARE
   _pcursor 		INTEGER := 1;
   _totalUsage 		NUMERIC := 0;
   _totalDays 		INTEGER := 0;
-  _reorderLevel 	NUMERIC := 0;
+  _reorderLevel 	INTEGER := 0;
   _result		TEXT;
   _usage		NUMERIC;
   _averageUsage 	NUMERIC;

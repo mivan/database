@@ -6,7 +6,6 @@
 
 SELECT *,
   'qty' AS reordlvl_curr_level_xtnumericrole,
-  'qty' AS reordlvl_calc_level_xtnumericrole,
   'qty' AS reordlvl_total_usage_xtnumericrole
 FROM updateReorderLevel((
   SELECT array(
