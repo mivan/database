@@ -444,10 +444,8 @@ CREATE OR REPLACE FUNCTION _soitemAfterTrigger() RETURNS TRIGGER AS $$
 DECLARE
   _check NUMERIC;
   _r RECORD;
-  _po BOOLEAN;
   _kit BOOLEAN;
   _fractional BOOLEAN;
-  _purchase BOOLEAN;
   _rec RECORD;
   _kstat TEXT;
   _pstat TEXT;
@@ -473,18 +471,6 @@ BEGIN
      AND (itemsite_id=_rec.coitem_itemsite_id));
   _kit := COALESCE(_kit, false);
   _fractional := COALESCE(_fractional, false);
-
- --Select purchase items
-  SELECT COALESCE(item_type,'')='P'
-    INTO _purchase
-    FROM itemsite JOIN item ON (itemsite_item_id=item_id)
-   WHERE (itemsite_id=_rec.coitem_itemsite_id);
-  _purchase := COALESCE(_purchase, false);
- 
- --Select salesorder related to purchaseorder 
-  SELECT itemsite_createsopo INTO _po 
-  FROM itemsite JOIN coitem ON  (itemsite_id=coitem_itemsite_id) 
-  WHERE (coitem_id=_rec.coitem_id);
 
   IF (_kit) THEN
   -- Kit Processing
@@ -586,59 +572,28 @@ BEGIN
     END IF;
   END IF;
 
-  IF (_purchase) THEN
-    --For purchase item processing
---    IF (fetchmetricbool('EnableDropShipments')) THEN
---      --Dropship processing
-      IF(_po) THEN
-        IF (TG_OP = 'UPDATE') THEN
-          IF ((NEW.coitem_qtyord <> OLD.coitem_qtyord) OR (NEW.coitem_qty_invuomratio <> OLD.coitem_qty_invuomratio) OR (NEW.coitem_scheddate <> OLD.coitem_scheddate)) THEN
-            --Update related poitem
-            UPDATE poitem
-            SET poitem_qty_ordered = roundQty(_fractional, (NEW.coitem_qtyord * NEW.coitem_qty_invuomratio / poitem_invvenduomratio)),
-                poitem_duedate = NEW.coitem_scheddate 
-            WHERE (poitem_id = OLD.coitem_order_id);
-
-            --Generate the PoItemUpdatedBySo event
-            INSERT INTO evntlog
-                        ( evntlog_evnttime, evntlog_username, evntlog_evnttype_id,
-                          evntlog_ordtype, evntlog_ord_id, evntlog_warehous_id,
-                          evntlog_number )
-            SELECT CURRENT_TIMESTAMP, evntnot_username, evnttype_id,
-              'P', poitem_id, itemsite_warehous_id,
-            (pohead_number || '-'|| poitem_linenumber || ': ' || item_number)
-            FROM evntnot JOIN evnttype ON (evntnot_evnttype_id=evnttype_id)
-                 JOIN itemsite ON (evntnot_warehous_id=itemsite_warehous_id)
-                 JOIN item ON (itemsite_item_id=item_id)
-                 JOIN poitem ON (poitem_itemsite_id=itemsite_id)
-                 JOIN pohead ON (poitem_pohead_id=pohead_id)
-            WHERE( (poitem_id=OLD.coitem_order_id)
-            AND (poitem_duedate <= (CURRENT_DATE + itemsite_eventfence))
-            AND (evnttype_name='PoItemUpdatedBySo') );
-          END IF;
-
-          --If soitem is cancelled
-          IF ((NEW.coitem_status = 'X') AND (OLD.coitem_status <> 'X')) THEN
-            --Generate the PoItemSoCancelled event
-            INSERT INTO evntlog
-                        ( evntlog_evnttime, evntlog_username, evntlog_evnttype_id,
-                          evntlog_ordtype, evntlog_ord_id, evntlog_warehous_id,
-                          evntlog_number )
-            SELECT CURRENT_TIMESTAMP, evntnot_username, evnttype_id,
-            'P', poitem_id, itemsite_warehous_id,
-            (pohead_number || '-' || poitem_linenumber || ': ' || item_number)
-            FROM evntnot JOIN evnttype ON (evntnot_evnttype_id=evnttype_id)
-                 JOIN itemsite ON (evntnot_warehous_id=itemsite_warehous_id)
-                 JOIN item ON (itemsite_item_id=item_id)
-                 JOIN poitem ON (poitem_itemsite_id=itemsite_id)
-            JOIN pohead ON( poitem_pohead_id=pohead_id)
-            WHERE( (poitem_id=OLD.coitem_order_id)
-            AND (poitem_duedate <= (CURRENT_DATE + itemsite_eventfence))
-            AND (evnttype_name='PoItemSoCancelled') );
-          END IF;
-        END IF;
-      END IF; 
---    END IF;
+  IF (TG_OP = 'UPDATE') THEN
+    IF (NEW.coitem_order_type = 'P') THEN
+      --If soitem is cancelled
+      IF ((NEW.coitem_status = 'X') AND (OLD.coitem_status <> 'X')) THEN
+        --Generate the PoItemSoCancelled event
+        INSERT INTO evntlog
+                    ( evntlog_evnttime, evntlog_username, evntlog_evnttype_id,
+                      evntlog_ordtype, evntlog_ord_id, evntlog_warehous_id,
+                      evntlog_number )
+        SELECT CURRENT_TIMESTAMP, evntnot_username, evnttype_id,
+        'P', poitem_id, itemsite_warehous_id,
+        (pohead_number || '-' || poitem_linenumber || ': ' || item_number)
+        FROM evntnot JOIN evnttype ON (evntnot_evnttype_id=evnttype_id)
+             JOIN itemsite ON (evntnot_warehous_id=itemsite_warehous_id)
+             JOIN item ON (itemsite_item_id=item_id)
+             JOIN poitem ON (poitem_itemsite_id=itemsite_id)
+             JOIN pohead ON( poitem_pohead_id=pohead_id)
+        WHERE( (poitem_id=OLD.coitem_order_id)
+        AND (poitem_duedate <= (CURRENT_DATE + itemsite_eventfence))
+        AND (evnttype_name='PoItemSoCancelled') );
+      END IF;
+    END IF;
   END IF;
 
   IF (_rec.coitem_subnumber > 0) THEN
