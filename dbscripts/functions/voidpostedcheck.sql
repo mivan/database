@@ -109,14 +109,20 @@ BEGIN
 
   ELSE
     FOR _r IN SELECT checkitem_amount, checkitem_discount,
-                     CASE WHEN (checkitem_apopen_id IS NOT NULL) THEN
-                       checkitem_amount / apopen_curr_rate
-                     ELSE
-                       currToBase(checkitem_curr_id,
-                                  checkitem_amount,
-                                  COALESCE(checkitem_docdate, _p.checkhead_checkdate)) 
+                     CASE WHEN (checkitem_apopen_id IS NOT NULL AND apopen_doctype='C') THEN
+                            checkitem_amount / apopen_curr_rate * -1.0
+                          WHEN (checkitem_apopen_id IS NOT NULL) THEN
+                            checkitem_amount / apopen_curr_rate
+                          ELSE
+                            currToBase(checkitem_curr_id,
+                                       checkitem_amount,
+                                       COALESCE(checkitem_docdate, _p.checkhead_checkdate)) 
                      END AS checkitem_amount_base,
-                       checkitem_amount / checkitem_curr_rate	 AS amount_check,
+                     currTocurr(checkitem_curr_id, _p.checkhead_curr_id,
+                                CASE WHEN (checkitem_apopen_id IS NOT NULL AND apopen_doctype='C') THEN
+                                          checkitem_amount * -1.0
+                                     ELSE checkitem_amount END,
+                                  _p.checkhead_checkdate) AS amount_check,
                      apopen_id, apopen_doctype, apopen_docnumber, apopen_curr_rate, apopen_docdate,
                      aropen_id, aropen_doctype, aropen_docnumber,
                      checkitem_curr_id, checkitem_curr_rate,
@@ -152,13 +158,13 @@ BEGIN
 
 
           PERFORM insertIntoGLSeries( _sequence, _p.checkrecip_gltrans_source,
-				      'DS', _r.apopen_docnumber,
+                                      'DS', _r.apopen_docnumber,
                                       findAPDiscountAccount(_p.checkhead_recip_id),
                                       round(_r.checkitem_discount / _r.apopen_curr_rate, 2) * -1,
                                       pVoidDate, _gltransNote, pCheckid);
 
           PERFORM insertIntoGLSeries( _sequence, _p.checkrecip_gltrans_source,
-				      'DS', _r.apopen_docnumber,
+                                      'DS', _r.apopen_docnumber,
                                       findAPAccount(_p.checkhead_recip_id),
                                       round(_r.checkitem_discount / _r.apopen_curr_rate, 2),
                                       pVoidDate, _gltransNote, pCheckid);

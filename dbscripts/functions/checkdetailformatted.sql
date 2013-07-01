@@ -121,6 +121,25 @@ BEGIN
   
   UNION
   
+  SELECT --CREDIT MEMO -------------------------
+    2 AS ord,
+    1 AS sequence_value,
+    checkitem_invcnumber,
+    checkitem_ponumber,
+    formatMoney(checkitem_amount * -1.0) AS f_amount,
+    'Credit Memo PO#: ' || checkitem_ponumber AS doc_number,
+    ''  AS f_docdate,
+    'Credit Memo: ' || checkitem_vouchernumber AS doc_reference,
+    checkitem_vouchernumber AS vouchernumber,
+    '' AS amount,
+    formatMoney(checkitem_amount) AS disc_cred
+  FROM checkitem, apopen
+  WHERE ((checkitem_checkhead_id=pCheckheadid)
+    AND  (checkitem_vouchernumber = apopen_docnumber)
+    AND  (apopen_doctype = 'C'))
+  
+  UNION
+  
   SELECT --CREDITs--------------------------
     3 AS ord,
     1 AS sequence_value,
