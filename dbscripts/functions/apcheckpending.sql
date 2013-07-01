@@ -12,6 +12,7 @@ BEGIN
    WHERE ((checkitem_apopen_id=pApopenid)
      AND (NOT checkhead_deleted)
      AND (NOT checkhead_replaced)
+     AND (NOT checkhead_void)
      AND (NOT checkhead_posted));
 
   RETURN COALESCE(_qty, 0.0);
