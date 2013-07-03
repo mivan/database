@@ -4,11 +4,18 @@
 -- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple.
 -- See www.xtuple.com/CPAL for the full text of the software license.
 
-SELECT pohead_id, COALESCE(pohead_cohead_id, -1) AS pohead_cohead_id,
-                      pohead_number, vend_name,
-                      MIN(poitem_duedate) AS min_duedate, 
-                      pohead_status, pohead_printed,
-                      vend_number, vendtype_code, pohead_agent_username
+SELECT DISTINCT
+                      pohead_id AS id, COALESCE(pohead_cohead_id, -1) AS altid,
+                      pohead.*,
+                      calcPurchaseOrderDueDate(pohead_id) AS min_duedate,
+                      calcPurchaseOrderAmt(pohead_id) AS order_total,
+                      vend_name, vend_number, vendtype_code,
+                      CASE WHEN(pohead_status='C') THEN <? value("closed") ?>
+                           WHEN(pohead_status='U') THEN <? value("unposted") ?>
+                           WHEN(pohead_status='O') THEN <? value("open") ?>
+                           ELSE pohead_status
+                      END AS pohead_status_qtdisplayrole,
+                      'currency' AS order_total_xtnumericrole
                FROM pohead 
                  JOIN vendinfo ON (pohead_vend_id=vend_id)
                  JOIN vendtype ON (vend_vendtype_id=vendtype_id)
@@ -18,8 +25,6 @@ SELECT pohead_id, COALESCE(pohead_cohead_id, -1) AS pohead_cohead_id,
                <? if exists("warehous_id") ?>
                  JOIN poitem ON (poitem_pohead_id=pohead_id) 
                  JOIN itemsite ON (poitem_itemsite_id=itemsite_id)
-               <? else ?>
-                 LEFT OUTER JOIN poitem ON (poitem_pohead_id=pohead_id) 
                <? endif ?> 
                WHERE ( true
                <? if exists("search_pattern") ?> 
@@ -77,7 +82,4 @@ SELECT pohead_id, COALESCE(pohead_cohead_id, -1) AS pohead_cohead_id,
                  AND (itemsite_warehous_id = <? value("warehous_id") ?>)
                <? endif ?> 
                ) 
-               GROUP BY pohead_number, pohead_id, pohead_cohead_id,
-		 vend_name, pohead_status, pohead_printed,
-                        vendtype_code, pohead_agent_username, vend_number
                ORDER BY pohead_number;
