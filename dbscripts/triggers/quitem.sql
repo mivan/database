@@ -1,69 +1,60 @@
-CREATE OR REPLACE FUNCTION _quitemtrigger() RETURNS "trigger" AS '
+CREATE OR REPLACE FUNCTION _quitemtrigger() RETURNS "trigger" AS $$
 -- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
-  _cmnttypeid INTEGER;
+  _changelog BOOLEAN := FALSE;
   _check BOOLEAN;
 
 BEGIN
   --  Checks
-  SELECT checkPrivilege(''MaintainQuotes'') INTO _check;
+  SELECT checkPrivilege('MaintainQuotes') INTO _check;
   IF NOT (_check) THEN
-    RAISE EXCEPTION ''You do not have privileges to maintain Quotes.'';
+    RAISE EXCEPTION 'You do not have privileges to maintain Quotes.';
   END IF;
 
-  IF ( SELECT (metric_value=''t'')
-       FROM metric
-       WHERE (metric_name=''SalesOrderChangeLog'') ) THEN
---  Cache the cmnttype_id for ChangeLog
-    SELECT cmnttype_id INTO _cmnttypeid
-    FROM cmnttype
-    WHERE (cmnttype_name=''ChangeLog'');
-  ELSE
-    _cmnttypeid := -1;
+  IF ( SELECT fetchMetricBool('SalesOrderChangeLog') ) THEN
+    _changelog := TRUE;
   END IF;
 
-  IF (TG_OP = ''INSERT'') THEN
-    IF (_cmnttypeid <> -1) THEN
-      PERFORM postComment(_cmnttypeid, ''QI'', NEW.quitem_id, ''Created'');
+  IF (TG_OP = 'INSERT') THEN
+    IF (_changelog) THEN
+      PERFORM postComment('ChangeLog', 'QI', NEW.quitem_id, 'Created');
     END IF;
 
     RETURN NEW;
+  END IF;
 
-  ELSE
-    IF (TG_OP = ''DELETE'') THEN
-      DELETE FROM comment
-      WHERE ( (comment_source=''QI'')
-       AND (comment_source_id=OLD.quitem_id) );
+  IF (TG_OP = 'DELETE') THEN
+    DELETE FROM comment
+    WHERE ( (comment_source='QI')
+     AND (comment_source_id=OLD.quitem_id) );
 
-      DELETE FROM charass
-       WHERE ((charass_target_type=''QI'')
-         AND  (charass_target_id=OLD.quitem_id));
+    DELETE FROM charass
+     WHERE ((charass_target_type='QI')
+       AND  (charass_target_id=OLD.quitem_id));
  
-      RETURN OLD;
+    RETURN OLD;
+  END IF;
 
-    ELSE
-      IF (TG_OP = ''UPDATE'') THEN
+  IF (TG_OP = 'UPDATE') THEN
+    IF (_changelog) THEN
+      IF (NEW.quitem_qtyord <> OLD.quitem_qtyord) THEN
+        PERFORM postComment( 'ChangeLog', 'QI', NEW.quitem_id,
+                             ( 'Changed Qty. Ordered from ' || formatQty(OLD.quitem_qtyord) ||
+                               ' to ' || formatQty(NEW.quitem_qtyord) ) );
+      END IF;
 
-        IF (NEW.quitem_qtyord <> OLD.quitem_qtyord) THEN
-          IF (_cmnttypeid <> -1) THEN
-            PERFORM postComment( _cmnttypeid, ''QI'', NEW.quitem_id,
-                                 ( ''Changed Qty. Ordered from '' || formatQty(OLD.quitem_qtyord) ||
-                                   '' to '' || formatQty(NEW.quitem_qtyord) ) );
-          END IF;
+      IF (NEW.quitem_price <> OLD.quitem_price) THEN
+        PERFORM postComment( 'ChangeLog', 'QI', NEW.quitem_id,
+                             ( 'Changed Unit Price from ' || formatPrice(OLD.quitem_price) ||
+                               ' to ' || formatPrice(NEW.quitem_price) ) );
+      END IF;
 
-        END IF;
-
-        IF (NEW.quitem_scheddate <> OLD.quitem_scheddate) THEN
-          IF (_cmnttypeid <> -1) THEN
-            PERFORM postComment( _cmnttypeid, ''QI'', NEW.quitem_id,
-                                 ( ''Changed Sched. Date from '' || formatDate(OLD.quitem_scheddate) ||
-                                   '' to '' || formatDate(NEW.quitem_scheddate)) );
-          END IF;
-
-        END IF;
-
-      END IF; 
+      IF (NEW.quitem_scheddate <> OLD.quitem_scheddate) THEN
+        PERFORM postComment( 'ChangeLog', 'QI', NEW.quitem_id,
+                             ( 'Changed Sched. Date from ' || formatDate(OLD.quitem_scheddate) ||
+                               ' to ' || formatDate(NEW.quitem_scheddate)) );
+      END IF;
     END IF;
   END IF;
 
@@ -72,7 +63,7 @@ BEGIN
   RETURN NEW;
 
 END;
-' LANGUAGE 'plpgsql';
+$$ LANGUAGE 'plpgsql';
 
 DROP TRIGGER quitemtrigger ON quitem;
 CREATE TRIGGER quitemtrigger
@@ -81,7 +72,7 @@ CREATE TRIGGER quitemtrigger
   FOR EACH ROW
   EXECUTE PROCEDURE _quitemtrigger();
 
-CREATE OR REPLACE FUNCTION _quitemBeforeTrigger() RETURNS TRIGGER AS '
+CREATE OR REPLACE FUNCTION _quitemBeforeTrigger() RETURNS TRIGGER AS $$
 -- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
@@ -90,18 +81,18 @@ DECLARE
 BEGIN
   -- Check
   IF (NEW.quitem_scheddate IS NULL) THEN
-  	RAISE EXCEPTION ''A schedule date is required.'';
+  	RAISE EXCEPTION 'A schedule date is required.';
   END IF;
 
   -- If this is imported, go ahead and insert default characteristics
-   IF ((TG_OP = ''INSERT'') AND NEW.quitem_imported) THEN
-     PERFORM updateCharAssignment(''SI'', NEW.quitem_id, char_id, charass_value) 
+   IF ((TG_OP = 'INSERT') AND NEW.quitem_imported) THEN
+     PERFORM updateCharAssignment('SI', NEW.quitem_id, char_id, charass_value) 
      FROM (
        SELECT DISTINCT char_id, char_name, charass_value
        FROM charass, char, itemsite, item
        WHERE ((itemsite_id=NEW.quitem_itemsite_id)
        AND (itemsite_item_id=item_id)
-       AND (charass_target_type=''I'') 
+       AND (charass_target_type='I') 
        AND (charass_target_id=item_id)
        AND (charass_default)
        AND (char_id=charass_char_id))
@@ -110,10 +101,14 @@ BEGIN
 
   RETURN NEW;
 END;
-' LANGUAGE 'plpgsql';
+$$ LANGUAGE 'plpgsql';
 
 DROP TRIGGER quitemBeforeTrigger ON quitem;
-CREATE TRIGGER quitemBeforeTrigger BEFORE INSERT OR UPDATE ON quitem FOR EACH ROW EXECUTE PROCEDURE _quitemBeforeTrigger();
+CREATE TRIGGER quitemBeforeTrigger
+  BEFORE INSERT OR UPDATE
+  ON quitem
+  FOR EACH ROW
+  EXECUTE PROCEDURE _quitemBeforeTrigger();
 -- TODO: there are two BEFORE triggers. should these be merged?
 
 
@@ -142,5 +137,9 @@ END;
 $$ LANGUAGE 'plpgsql';
 
 DROP TRIGGER quitemAfterTrigger ON quitem;
-CREATE TRIGGER quitemAfterTrigger AFTER INSERT OR UPDATE ON quitem FOR EACH ROW EXECUTE PROCEDURE _quitemAfterTrigger();
+CREATE TRIGGER quitemAfterTrigger
+  AFTER INSERT OR UPDATE
+  ON quitem
+  FOR EACH ROW
+  EXECUTE PROCEDURE _quitemAfterTrigger();
 
