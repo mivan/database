@@ -135,6 +135,15 @@ BEGIN
 
     END IF;
 
+    IF (NEW.coitem_price <> OLD.coitem_price) THEN
+      IF (_changelog) THEN
+	PERFORM postComment( 'ChangeLog', 'SI', NEW.coitem_id,
+			     ( 'Changed Unit Price from ' || formatPrice(OLD.coitem_price) ||
+			       ' to ' || formatPrice(NEW.coitem_price) ) );
+      END IF;
+
+    END IF;
+
     IF (NEW.coitem_scheddate <> OLD.coitem_scheddate) THEN
       INSERT INTO evntlog ( evntlog_evnttime, evntlog_username, evntlog_evnttype_id,
 			    evntlog_ordtype, evntlog_ord_id, evntlog_warehous_id, evntlog_number,
