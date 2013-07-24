@@ -140,7 +140,7 @@ BEGIN
   
   UNION
   
-  SELECT --CREDITs--------------------------
+  SELECT --CREDITs FOR VOUCHERS-----------------
     3 AS ord,
     1 AS sequence_value,
     checkitem_invcnumber,
@@ -150,12 +150,33 @@ BEGIN
     formatDate(vohead_docdate) AS f_docdate,
     'Credit Applied: ' || apapply_source_doctype || ' ' ||
                           apapply_source_docnumber AS doc_reference,
-    'Voucher ' || checkitem_vouchernumber AS vouchernumber,
+    'Voucher: ' || checkitem_vouchernumber AS vouchernumber,
     '' AS amount,
     formatMoney((apapply_amount)) AS disc_cred
   FROM checkitem, vohead, apapply
   WHERE ((checkitem_checkhead_id=pCheckheadid)
     AND  (checkitem_vouchernumber = vohead_number)
+    AND  (apapply_target_docnumber = checkitem_vouchernumber ))
+  
+  UNION 
+  
+  SELECT --CREDITs FOR DEBIT MEMOS-----------
+    3 AS ord,
+    1 AS sequence_value,
+    checkitem_invcnumber,
+    checkitem_ponumber,
+    formatMoney(checkitem_amount) AS f_amount,
+    'Debit Memo PO#: ' || checkitem_ponumber AS doc_number,
+    '' AS f_docdate,
+    'Credit Applied: ' || apapply_source_doctype || ' ' ||
+                          apapply_source_docnumber AS doc_reference,
+    'Debit Memo: ' || checkitem_vouchernumber AS vouchernumber,
+    '' AS amount,
+    formatMoney((apapply_amount)) AS disc_cred
+  FROM checkitem, apopen, apapply
+  WHERE ((checkitem_checkhead_id=pCheckheadid)
+    AND  (checkitem_vouchernumber = apopen_docnumber)
+    AND  (apopen_doctype = 'D')
     AND  (apapply_target_docnumber = checkitem_vouchernumber ))
   
   UNION 
