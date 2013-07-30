@@ -1,9 +1,9 @@
 -- Group: maintainShipping
 -- Name: detail
 -- Notes: used by maintainShipping
--- order header info
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple.
--- See www.xtuple.com/CPAL for the full text of the software license.
+--        order header info
+--        Copyright (c) 1999-2013 by OpenMFG LLC, d/b/a xTuple.
+--        See www.xtuple.com/CPAL for the full text of the software license.
 
 SELECT shiphead_id AS parent_id, cohead_id AS child_id,
        shiphead_number, cohead_number AS linenumber,
@@ -20,6 +20,7 @@ SELECT shiphead_id AS parent_id, cohead_id AS child_id,
        NULL AS f_shipqty, NULL AS f_shipvalue,
 <? endif ?>
        cohead_holdtype AS holdtype,
+       shiphead_notes AS notes,
        shiphead_number AS shiphead_number_qtdisplayrole,
        'SO' AS ordertype_qtdisplayrole,
        'qty' AS shipqty_xtnumericrole,
@@ -53,6 +54,7 @@ SELECT cohead_id AS parent_id, coitem_id AS child_id,
        formatCost(valueAtShipping('SO', coitem_id)) AS f_shipvalue,
 <? endif ?>
        cohead_holdtype AS holdtype,
+       '' as notes,
        NULL AS shiphead_number_qtdisplayrole,
        NULL AS ordertype_qtdisplayrole,
        'qty' AS shipqty_xtnumericrole,
@@ -89,6 +91,7 @@ SELECT shiphead_id AS parent_id, shipitem_id AS child_id,
        NULL AS f_shipvalue,
 <? endif ?>
        '' AS holdtype,
+       '' AS notes,
        NULL AS shiphead_number_qtdisplayrole,
        NULL AS ordertype_qtdisplayrole,
        'qty' AS shipqty_xtnumericrole,
@@ -126,6 +129,7 @@ SELECT shiphead_id AS parent_id, tohead_id AS child_id,
        NULL AS f_shipqty, NULL AS f_shipvalue,
 <? endif ?>
        'TO' AS holdtype,
+       shiphead_notes AS notes,
        shiphead_number AS shiphead_number_qtdisplayrole,
        'TO' AS ordertype_qtdisplayrole,
        'qty' AS shipqty_xtnumericrole,
@@ -158,6 +162,7 @@ SELECT tohead_id AS parent_id, toitem_id AS child_id,
        formatCost(valueAtShipping('TO', toitem_id)) AS f_shipvalue,
 <? endif ?>
        'TO' AS holdtype,
+       '' AS notes,
        NULL AS shiphead_number_qtdisplayrole,
        NULL AS ordertype_qtdisplayrole,
        'qty' AS shipqty_xtnumericrole,
@@ -193,6 +198,7 @@ SELECT shiphead_id AS parent_id, shipitem_id AS child_id,
        NULL AS f_shipvalue,
 <? endif ?>
        '' AS holdtype,
+       '' AS notes,
        NULL AS shiphead_number_qtdisplayrole,
        NULL AS ordertype_qtdisplayrole,
        'qty' AS shipqty_xtnumericrole,
