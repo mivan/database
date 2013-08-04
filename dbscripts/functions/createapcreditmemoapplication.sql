@@ -8,7 +8,7 @@ DECLARE
   _apCreditApplyId	INTEGER;
 
 BEGIN
-  IF (pAmount > (SELECT currToCurr(apopen_curr_id, pCurrId, ROUND(apopen_amount - apopen_paid, 2), apopen_docdate)
+  IF (pAmount > (SELECT ROUND(currToCurr(apopen_curr_id, pCurrId, (apopen_amount - apopen_paid), apopen_docdate), 2)
                  FROM apopen
                  WHERE (apopen_id=pTargetApopenId))) THEN
     RETURN -1;

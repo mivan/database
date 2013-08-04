@@ -15,6 +15,7 @@ SELECT orderid, altorderid, ordertype, ordernumber, sequence, item_number,
        formatQty(qtyreceived) AS f_qtyreceived,
        formatQty(balance) AS f_balance,
 <? endif ?>
+       notes,
        1 AS runningavail_xtrunningrole,
        <? value("qoh") ?> AS runningavail_xtrunninginit,
        CASE WHEN late THEN 'error' END AS duedate_qtforegroundrole,
@@ -51,7 +52,8 @@ SELECT tohead_id AS orderid, toitem_id AS altorderid, 'T/O' AS ordertype,
        (toitem_stdcost * toitem_qty_ordered) AS amount,
        toitem_qty_ordered AS qtyordered,
        toitem_qty_received AS qtyreceived,
-       noNeg(toitem_qty_ordered - toitem_qty_received) AS balance
+       noNeg(toitem_qty_ordered - toitem_qty_received) AS balance,
+       tohead_ordercomments AS notes
 FROM tohead, toitem
 WHERE ((toitem_tohead_id=tohead_id)
   AND  (toitem_status NOT IN ('C', 'X'))
@@ -69,7 +71,8 @@ SELECT tohead_id AS orderid, toitem_id AS altorderid, 'T/O' AS ordertype,
        (toitem_stdcost * toitem_qty_ordered) AS amount,
        toitem_qty_ordered AS qtyordered,
        toitem_qty_received AS qtyreceived,
-       -1 * noNeg(toitem_qty_ordered - toitem_qty_shipped - qtyAtShipping('TO', toitem_id)) AS balance
+       -1 * noNeg(toitem_qty_ordered - toitem_qty_shipped - qtyAtShipping('TO', toitem_id)) AS balance,
+       tohead_ordercomments AS notes
        -- TODO: old code had ^^^^ for formatted balance and vvvv used to calc running avail! which is right?
        -- -1 * noNeg(toitem_qty_ordered - toitem_qty_received) AS balance
 FROM tohead, toitem
@@ -91,7 +94,8 @@ SELECT wo_id AS orderid, -1 AS altorderid,
        (itemCost(wo_itemsite_id) * wo_qtyord) AS amount,
        wo_qtyord AS qtyordered,
        wo_qtyrcv AS qtyreceived,
-       noNeg(wo_qtyord - wo_qtyrcv) AS balance
+       noNeg(wo_qtyord - wo_qtyrcv) AS balance,
+       wo_prodnotes AS notes
 FROM wo, itemsite, item
 WHERE ((wo_status<>'C')
   AND  (wo_itemsite_id=itemsite_id)
@@ -113,7 +117,8 @@ SELECT wo_id AS orderid, -1 AS altorderid,
        (womatl_cost * womatl_qtyreq) AS amount,
        womatl_qtyreq AS qtyordered,
        COALESCE(SUM(abs(invhist_invqty)),0) AS qtyreceived,
-       noNeg(womatl_qtyreq - COALESCE(SUM(abs(invhist_invqty)),0)) AS balance
+       noNeg(womatl_qtyreq - COALESCE(SUM(abs(invhist_invqty)),0)) AS balance,
+       wo_prodnotes AS notes
 FROM womatl
   JOIN wo ON (wo_id=womatl_wo_id)
   JOIN itemsite ON (womatl_itemsite_id=itemsite_id)
@@ -125,7 +130,7 @@ WHERE ((wo_status<>'C')
   AND  (itemsite_warehous_id=<? value("warehous_id") ?>)
   AND  (itemsite_item_id=<? value("item_id") ?>)
   AND  (item_type = 'T'))
-GROUP BY wo_id, wo_duedate, item_number, womatl_qtyreq, womatl_cost
+GROUP BY wo_id, wo_duedate, item_number, womatl_qtyreq, womatl_cost, wo_prodnotes
 
 <? if exists("Manufacturing") ?>
 UNION
@@ -139,7 +144,8 @@ SELECT wo_id AS orderid, -1 AS altorderid,
        (itemCost(wo_itemsite_id) * wo_qtyord * brddist_stdqtyper) AS amount,
        (wo_qtyord * brddist_stdqtyper) AS qtyordered,
        (wo_qtyrcv * brddist_stdqtyper) AS qtyreceived,
-       noNeg((wo_qtyord - wo_qtyrcv) * brddist_stdqtyper) AS balance
+       noNeg((wo_qtyord - wo_qtyrcv) * brddist_stdqtyper) AS balance,
+       wo_prodnotes AS notes
 FROM xtmfg.brddist, wo, itemsite, item
 WHERE ((wo_status<>'C')
   AND  (brddist_wo_id=wo_id)
@@ -162,7 +168,8 @@ SELECT wo_id AS orderid, womatl_id AS altorderid,
       (itemCost(womatl_itemsite_id) * itemuomtouom(womatlis.itemsite_item_id, womatl_uom_id, NULL, womatl_qtyreq)) AS amount,
       itemuomtouom(womatlis.itemsite_item_id, womatl_uom_id, NULL, womatl_qtyreq) AS qtyordered,
       itemuomtouom(womatlis.itemsite_item_id, womatl_uom_id, NULL, womatl_qtyiss) AS qtyreceived,
-      itemuomtouom(womatlis.itemsite_item_id, womatl_uom_id, NULL, (noNeg(womatl_qtyreq - womatl_qtyiss) * -1)) AS balance
+      itemuomtouom(womatlis.itemsite_item_id, womatl_uom_id, NULL, (noNeg(womatl_qtyreq - womatl_qtyiss) * -1)) AS balance,
+      wo_prodnotes AS notes
 FROM womatl, wo, itemsite AS wois, item AS woi, itemsite AS womatlis, item AS womatli
 WHERE ((wo_status<>'C')
   AND  (wo_itemsite_id=wois.itemsite_id)
@@ -186,7 +193,8 @@ SELECT wo_id AS orderid, womatl_id AS altorderid,
       (womatl_cost * itemuomtouom(womatlis.itemsite_item_id, womatl_uom_id, NULL, womatl_qtyreq)) AS amount,
       itemuomtouom(womatlis.itemsite_item_id, womatl_uom_id, NULL, womatl_qtyreq) AS qtyordered,
       COALESCE(SUM(invhist_invqty),0) AS qtyreceived,
-      (itemuomtouom(womatlis.itemsite_item_id, womatl_uom_id, NULL, (noNeg(womatl_qtyreq))) - COALESCE(SUM(invhist_invqty),0)) * -1 AS balance
+      (itemuomtouom(womatlis.itemsite_item_id, womatl_uom_id, NULL, (noNeg(womatl_qtyreq))) - COALESCE(SUM(invhist_invqty),0)) * -1 AS balance,
+      wo_prodnotes AS notes
 FROM itemsite AS wois, item AS woi, itemsite AS womatlis, item AS womatli, wo, womatl
   LEFT OUTER JOIN womatlpost ON (womatl_id=womatlpost_womatl_id)
   LEFT OUTER JOIN invhist ON ((womatlpost_invhist_id=invhist_id)
@@ -200,7 +208,7 @@ WHERE ((wo_status<>'C')
   AND  (womatlis.itemsite_item_id=<? value("item_id") ?>)
   AND  (womatlis.itemsite_warehous_id=<? value("warehous_id") ?>)
   AND  (womatl_itemsite_id=womatlis.itemsite_id) )
-GROUP BY wo_id, woi.item_number, womatl_id, womatl_duedate, womatlis.itemsite_item_id, womatl_uom_id, womatl_qtyreq, womatl_cost
+GROUP BY wo_id, woi.item_number, womatl_id, womatl_duedate, womatlis.itemsite_item_id, womatl_uom_id, womatl_qtyreq, womatl_cost, wo_prodnotes
 
 UNION
 SELECT pohead_id AS orderid, poitem_id AS altorderid,
@@ -213,7 +221,8 @@ SELECT pohead_id AS orderid, poitem_id AS altorderid,
       (poitem_unitprice * poitem_qty_ordered) AS amount,
       (poitem_qty_ordered * poitem_invvenduomratio) AS qtyordered,
       (NoNeg(poitem_qty_received - poitem_qty_returned) * poitem_invvenduomratio) AS qtyreceived,
-      (noNeg(poitem_qty_ordered - poitem_qty_received) * poitem_invvenduomratio) AS balance
+      (noNeg(poitem_qty_ordered - poitem_qty_received) * poitem_invvenduomratio) AS balance,
+       pohead_comments AS notes
 FROM pohead, vendinfo, poitem, itemsite, item
 WHERE ((vend_id=pohead_vend_id)
   AND  (poitem_pohead_id=pohead_id)
@@ -234,7 +243,8 @@ SELECT cohead_id AS orderid, coitem_id AS altorderid,
        (coitem_price * coitem_qtyord) AS amount,
        (coitem_qtyord * coitem_qty_invuomratio) AS qtyordered,
        (coitem_qty_invuomratio * (coitem_qtyshipped - coitem_qtyreturned + qtyAtShipping(coitem_id))) AS qtyreceived,
-       (coitem_qty_invuomratio * noNeg(coitem_qtyord - coitem_qtyshipped + coitem_qtyreturned - qtyAtShipping(coitem_id)) * -1) AS balance
+       (coitem_qty_invuomratio * noNeg(coitem_qtyord - coitem_qtyshipped + coitem_qtyreturned - qtyAtShipping(coitem_id)) * -1) AS balance,
+       cohead_ordercomments AS notes
 FROM coitem, cohead, custinfo, itemsite, item
 WHERE ((coitem_status='O')
   AND  (cohead_cust_id=cust_id)
@@ -259,7 +269,8 @@ SELECT planord_id AS orderid, -1 AS altorderid,
        (itemCost(planord_itemsite_id) * planord_qty) AS amount,
        planord_qty AS qtyordered,
        NULL AS qtyreceived,
-       planord_qty AS balance
+       planord_qty AS balance,
+       planord_comments AS notes
 FROM planord, itemsite
 WHERE ((planord_type='P')
   AND  (planord_itemsite_id=itemsite_id)
@@ -279,7 +290,8 @@ SELECT planord_id AS orderid, -1 AS altorderid,
        (itemCost(planord_itemsite_id) * planord_qty) AS amount,
        planord_qty AS qtyordered,
        NULL AS qtyreceived,
-       planord_qty AS balance
+       planord_qty AS balance,
+       planord_comments AS notes
 FROM planord, itemsite
 WHERE ((planord_type='W')
   AND  (planord_itemsite_id=itemsite_id)
@@ -300,7 +312,8 @@ SELECT planord_id AS orderid, -1 AS altorderid,
        (itemCost(planreq_itemsite_id) * planreq_qty) AS amount,
        planreq_qty AS qtyordered,
        NULL AS qtyreceived,
-       planreq_qty AS balance
+       planreq_qty AS balance,
+       planord_comments AS notes
 FROM planreq
   JOIN itemsite ON (itemsite_id=planreq_itemsite_id)
   JOIN item ON (item_id=itemsite_item_id)
@@ -323,7 +336,8 @@ SELECT planord_id AS orderid, -1 AS altorderid,
        (itemCost(planord_itemsite_id) * planord_qty) AS amount,
        planord_qty AS qtyordered,
        NULL AS qtyreceived,
-       planord_qty AS balance
+       planord_qty AS balance,
+       planord_comments AS notes
 FROM planord JOIN itemsite ON (itemsite.itemsite_id=planord_itemsite_id)
              JOIN whsinfo ON (whsinfo.warehous_id=itemsite.itemsite_warehous_id)
              JOIN itemsite srcitemsite ON (srcitemsite.itemsite_id=planord_supply_itemsite_id)
@@ -345,7 +359,8 @@ SELECT planord_id AS orderid, -1 AS altorderid,
        (itemCost(planord_itemsite_id) * planord_qty) AS amount,
        planord_qty AS qtyordered,
        NULL AS qtyreceived,
-       (planord_qty * -1) AS balance
+       (planord_qty * -1) AS balance,
+       planord_comments AS notes
 FROM planord JOIN itemsite ON (itemsite.itemsite_id=planord_itemsite_id)
              JOIN whsinfo ON (whsinfo.warehous_id=itemsite.itemsite_warehous_id)
              JOIN itemsite srcitemsite ON (srcitemsite.itemsite_id=planord_supply_itemsite_id)
@@ -372,7 +387,8 @@ SELECT planreq_id AS orderid, -1 AS altorderid,
        (itemCost(planreq_itemsite_id) * planreq_qty) AS amount,
        planreq_qty AS f_qtyordered,
        NULL AS qtyreceived,
-       (planreq_qty * -1) AS balance
+       (planreq_qty * -1) AS balance,
+       planreq_notes AS notes
 FROM planreq, planord, itemsite, item
 WHERE ((planreq_source='P')
   AND  (planreq_source_id=planord_id)
@@ -393,7 +409,8 @@ SELECT pr_id AS orderid, -1 AS altorderid,
        (itemCost(pr_itemsite_id) * pr_qtyreq) AS amount,
        pr_qtyreq AS qtyordered,
        NULL AS qtyreceived,
-       pr_qtyreq AS balance
+       pr_qtyreq AS balance,
+       planreq_note AS notes
 FROM pr, itemsite, item
 WHERE ((pr_itemsite_id=itemsite_id)
   AND  (itemsite_item_id=item_id)

@@ -1,8 +1,8 @@
 -- Group: shipments
 -- Name: detail
 -- Notes: used by dspShipmentsByDate, dspShipmentsBySalesOrder, dspShipmentsByShipment
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple.
--- See www.xtuple.com/CPAL for the full text of the software license.
+--        Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple.
+--        See www.xtuple.com/CPAL for the full text of the software license.
 
 SELECT shiphead_id, lineitem_id,
        CASE WHEN (level=0) THEN order_number
@@ -28,6 +28,7 @@ SELECT shiphead_id, lineitem_id,
        formatQty(qtyord) AS f_qtyord,
        qtyshipped,
        formatQty(qtyshipped) AS f_qtyshipped,
+       notes,
        'qty' AS qtyord_xtnumericrole,
        'qty' AS qtyshipped_xtnumericrole,
        'curr' AS shiphead_freight_xtnumericrole,
@@ -50,7 +51,8 @@ SELECT shiphead_id, -1 AS lineitem_id, cohead_number AS sortkey1, shiphead_numbe
        '' AS itemdescription,
        '' AS warehous_code,
        0 AS qtyord,
-       0 AS qtyshipped
+       0 AS qtyshipped,
+       firstline(shiphead_notes) AS notes
 FROM shiphead, cohead, custinfo
 WHERE ( (shiphead_order_id=cohead_id)
  AND (cohead_cust_id=cust_id)
@@ -80,7 +82,8 @@ SELECT shiphead_id, coitem_id AS lineitem_id, cohead_number AS sortkey1, shiphea
        (item_descrip1 || ' ' || item_descrip2) AS itemdescription,
        warehous_code,
        coitem_qtyord AS qtyord,
-       SUM(shipitem_qty) AS qtyshipped
+       SUM(shipitem_qty) AS qtyshipped,
+       '' AS notes
 FROM shipitem, shiphead, coitem, cohead, custinfo, itemsite, item, whsinfo
 WHERE ( (shipitem_shiphead_id=shiphead_id)
  AND (shipitem_orderitem_id=coitem_id)
@@ -122,7 +125,8 @@ SELECT shiphead_id, -1 AS lineitem_id, tohead_number AS sortkey1, shiphead_numbe
        '' AS itemdescription,
        '' AS warehous_code,
        0 AS qtyord,
-       0 AS qtyshipped
+       0 AS qtyshipped,
+       firstline(shiphead_notes) AS notes
 FROM shiphead, tohead 
 WHERE ( (shiphead_order_id=tohead_id)
  AND (shiphead_shipped)
@@ -151,7 +155,8 @@ SELECT shiphead_id, toitem_id AS lineitem_id, tohead_number AS sortkey1, shiphea
        (item_descrip1 || ' ' || item_descrip2) AS itemdescription,
        tohead_srcname AS warehous_code,
        toitem_qty_ordered AS qtyord,
-       SUM(shipitem_qty) AS qtyshipped
+       SUM(shipitem_qty) AS qtyshipped,
+       '' AS notes
 FROM shipitem, shiphead, toitem, tohead, item 
 WHERE ( (shipitem_shiphead_id=shiphead_id)
  AND (shipitem_orderitem_id=toitem_id)
@@ -174,7 +179,7 @@ GROUP BY shiphead_id, toitem_id, shiphead_order_type, shiphead_number,
          tohead_number, shiphead_shipdate,
          toitem_linenumber, item_number, item_descrip1, item_descrip2,
          tohead_srcname, shiphead_tracknum, toitem_qty_ordered, 
-         shiphead_freight, shiphead_freight_curr_id 
+         shiphead_freight, shiphead_freight_curr_id, notes
 <? endif ?>
    ) AS data
 ORDER BY sortkey1, sortkey2, level, linenumber DESC;

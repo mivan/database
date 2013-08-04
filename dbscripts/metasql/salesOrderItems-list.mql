@@ -1,8 +1,8 @@
 -- Group: salesOrderItems
 -- Name: list
 -- Notes: used by salesOrder
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple.
--- See www.xtuple.com/CPAL for the full text of the software license.
+--        Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple.
+--        See www.xtuple.com/CPAL for the full text of the software license.
 
 SELECT coitem_id, coitem_altid, groupby,
        coitem_linenumber, coitem_subnumber, f_linenumber,
@@ -49,7 +49,16 @@ SELECT coitem_id, coitem_altid, groupby,
        CASE WHEN coitem_subnumber = 0 THEN 0
             ELSE 1
        END AS xtindentrole,
-       spplytype, ordrnumbr
+       spplytype, ordrnumbr,
+       itemsite_qtyonhand,
+       'qty' AS itemsite_qtyonhand_xtnumericrole
+<? if exists("includeReservations") ?>
+       ,
+       reserved,
+       reservable,
+       'qty' AS reserved_xtnumericrole,
+       'qty' AS reservable_xtnumericrole
+<? endif?>
 FROM (
 SELECT coitem_id,
        CASE WHEN (coitem_status='C') THEN 1
@@ -88,12 +97,9 @@ SELECT coitem_id,
                                              AND  (invcitem_warehous_id=warehous_id)
                                              AND  (invcitem_linenumber=coitem_linenumber)
                                              AND  (cohead_id=coitem_cohead_id))) > 0)) THEN 'P'
-            WHEN (coitem_status='O' 
-                    AND itemsite_qtyonhand>=((coitem_qtyord - coitem_qtyshipped + coitem_qtyreturned) * coitem_qty_invuomratio) 
-                    AND (itemsite_qtyonhand - qtyAllocated(itemsite_id, CURRENT_DATE)
-                                         + qtyOrdered(itemsite_id, CURRENT_DATE) + 
-                                           ((coitem_qtyord - coitem_qtyshipped + coitem_qtyreturned) * coitem_qty_invuomratio))
-                                             >= 0) THEN 'R'
+            WHEN (coitem_status='O' AND (itemsite_qtyonhand - qtyAllocated(itemsite_id, CURRENT_DATE)
+                                         + qtyOrdered(itemsite_id, CURRENT_DATE))
+                                          >= ((coitem_qtyord - coitem_qtyshipped + coitem_qtyreturned) * coitem_qty_invuomratio)) THEN 'R'
             ELSE coitem_status END
        || CASE WHEN (coitem_firm) THEN 'F' ELSE '' END
        ) AS enhanced_status,
@@ -120,7 +126,13 @@ SELECT coitem_id,
             WHEN coitem_order_type='P' THEN (pohead_number || '-' || poitem_linenumber)
             WHEN coitem_order_type='R' THEN (pr_number || '-' || pr_subnumber)
             ELSE TEXT (' ')
-       END AS ordrnumbr
+       END AS ordrnumbr,
+       itemsite_qtyonhand
+<? if exists("includeReservations") ?>
+       ,
+       coitem_qtyreserved AS reserved,
+       itemsite_qtyonhand - qtyreserved(itemsite_id) AS reservable
+<? endif?>
   FROM cohead
        JOIN coitem ON (coitem_cohead_id=cohead_id)
        JOIN itemsite ON (itemsite_id=coitem_itemsite_id)
