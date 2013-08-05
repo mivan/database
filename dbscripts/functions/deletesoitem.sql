@@ -115,6 +115,11 @@ BEGIN
     END IF;
   END IF;
 
+-- Delete characteristic assignments
+  DELETE FROM charass
+  WHERE (charass_target_type='SI')
+    AND (charass_target_id=pSoitemid);
+
 -- Delete the coitem
   DELETE FROM coitem
   WHERE (coitem_id=pSoitemid);
