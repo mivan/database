@@ -36,6 +36,10 @@ BEGIN
   WHERE (aropenalloc_doctype='I')
     AND (aropenalloc_doc_id=pInvcheadid);
 
+  DELETE FROM charass
+  WHERE (charass_target_type='INV')
+    AND (charass_target_id=pInvcheadid);
+
   DELETE FROM invcitem
   WHERE (invcitem_invchead_id=pInvcheadid);
 

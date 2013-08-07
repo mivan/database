@@ -46,8 +46,13 @@ BEGIN
     _quoteNumber := pQuoteNumber;
   END IF;
 
-  DELETE FROM quitem
+  PERFORM deleteQuoteItem(quitem_id)
+  FROM quitem
   WHERE (quitem_quhead_id=pQuheadid);
+
+  DELETE FROM charass
+  WHERE (charass_target_type='QU')
+    AND (charass_target_id=pQuheadid);
 
   DELETE FROM quhead
   WHERE (quhead_id=pQuheadid);

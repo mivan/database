@@ -68,6 +68,10 @@ BEGIN
   DELETE FROM pack
   WHERE (pack_head_id=pSoheadid and pack_head_type = 'SO');
 
+  DELETE FROM charass
+  WHERE (charass_target_type='SO')
+    AND (charass_target_id=pSoheadid);
+
   DELETE FROM cohead
   WHERE (cohead_id=pSoheadid);
 
