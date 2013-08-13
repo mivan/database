@@ -181,9 +181,12 @@ BEGIN
           FROM comment
          WHERE comment_source = 'INCDT'
            AND comment_source_id = NEW.incdt_id
+           AND comment_user = getEffectiveXtUser()
            AND comment_cmnttype_id = _cmnttypeid;
         IF FOUND THEN
-          UPDATE comment SET comment_text = NEW.incdt_descrip WHERE comment_id = _cmntid;
+          UPDATE comment SET comment_text = NEW.incdt_descrip,
+                             comment_date = CURRENT_TIMESTAMP
+          WHERE comment_id = _cmntid;
         ELSE
           PERFORM postComment(_cmnttypeid, 'INCDT', NEW.incdt_id, NEW.incdt_descrip);
         END IF;
