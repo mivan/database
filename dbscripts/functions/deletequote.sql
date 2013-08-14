@@ -1,5 +1,5 @@
-SELECT dropIfExists('FUNCTION', 'deleteQuote(integer)', 'public');
-SELECT dropIfExists('FUNCTION', 'deleteQuote(integer, integer)', 'public');
+--SELECT dropIfExists('FUNCTION', 'deleteQuote(integer)', 'public');
+--SELECT dropIfExists('FUNCTION', 'deleteQuote(integer, integer)', 'public');
 
 CREATE OR REPLACE FUNCTION deleteQuote(INTEGER) RETURNS INTEGER AS $$
 -- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
