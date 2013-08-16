@@ -57,7 +57,7 @@ SELECT dropIfExists('VIEW', 'account', 'api');
     c.crmacct_notes AS notes
   FROM
     crmacct c
-      LEFT OUTER JOIN crmacct p ON (c.crmacct_id=p.crmacct_parent_id)
+      LEFT OUTER JOIN crmacct p ON (c.crmacct_parent_id=p.crmacct_id)
       LEFT OUTER JOIN cntct pc ON (c.crmacct_cntct_id_1=pc.cntct_id)
       LEFT OUTER JOIN addr m ON (pc.cntct_addr_id=m.addr_id)
       LEFT OUTER JOIN cntct sc ON (c.crmacct_cntct_id_2=sc.cntct_id)
