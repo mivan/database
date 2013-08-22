@@ -18,6 +18,8 @@ CREATE TYPE wodata AS
     wodata_duedate date,
     wodata_adhoc boolean,
     wodata_itemsite_id integer,
+    wodata_listprice numeric,
+    wodata_custprice numeric,
     wodata_qoh numeric,
     wodata_short numeric,
     wodata_qtyper numeric,
