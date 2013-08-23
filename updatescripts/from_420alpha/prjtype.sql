@@ -1,4 +1,4 @@
-﻿CREATE TABLE prjtype
+CREATE TABLE prjtype
 (
   prjtype_id serial NOT NULL,
   prjtype_code text,
