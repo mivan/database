@@ -184,6 +184,11 @@ BEGIN
      OR (OLD.itemsite_sold              != NEW.itemsite_sold)
      OR (OLD.itemsite_stocked           != NEW.itemsite_stocked)
      OR (OLD.itemsite_location_id       != NEW.itemsite_location_id)
+     OR (OLD.itemsite_recvlocation_id   != NEW.itemsite_recvlocation_id)
+     OR (OLD.itemsite_issuelocation_id  != NEW.itemsite_issuelocation_id)
+     OR (OLD.itemsite_location_dist     != NEW.itemsite_location_dist)
+     OR (OLD.itemsite_recvlocation_dist != NEW.itemsite_recvlocation_dist)
+     OR (OLD.itemsite_issuelocation_dist != NEW.itemsite_issuelocation_dist)
      OR (OLD.itemsite_useparams         != NEW.itemsite_useparams)
      OR (OLD.itemsite_useparamsmanual   != NEW.itemsite_useparamsmanual)
      OR (OLD.itemsite_soldranking       != NEW.itemsite_soldranking)
@@ -258,6 +263,13 @@ BEGIN
     END IF;
     
 -- Integrity check
+
+    -- Both insert and update
+    IF ( (NEW.itemsite_controlmethod IN ('S', 'L')) AND
+         (NEW.itemsite_location_dist OR NEW.itemsite_recvlocation_dist OR NEW.itemsite_issuelocation_dist) ) THEN
+      RAISE EXCEPTION 'You cannot auto-distribute Lot/Serial controlled Item Sites.';
+    END IF;
+
     IF (TG_OP = 'INSERT') THEN
       -- Handle MLC logic
       IF ( (NEW.itemsite_loccntrl) AND (NEW.itemsite_warehous_id IS NOT NULL) ) THEN
