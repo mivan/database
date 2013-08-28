@@ -159,7 +159,7 @@ BEGIN
     pDocDate, '',
     pOrderNumber, '', pDocDate,
     'C', pDocNumber, pDocDate,
-    1, (pAmount - _taxBaseValue) * -1, 0,
+    1, (pAmount + _taxBaseValue) * -1, 0, -- taxBaseValue is negative, so we add
     CASE WHEN pSalesrepid < 0 THEN NULL ELSE pSalesrepid END,
     (pCommissiondue * -1.0), FALSE,
     pCurrId, _glSequence, pCoCcpayId)
