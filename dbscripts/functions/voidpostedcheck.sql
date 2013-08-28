@@ -45,15 +45,18 @@ BEGIN
   SELECT trans_id INTO _result
   FROM ( SELECT gltrans_id AS trans_id
          FROM gltrans
-         WHERE ((gltrans_doctype='CK')
-           AND  (gltrans_misc_id=_p.checkhead_id)
-           AND  (gltrans_rec))
+              LEFT OUTER JOIN bankrecitem ON (bankrecitem_source='GL' AND bankrecitem_source_id=gltrans_id)
+         WHERE ( (gltrans_doctype='CK')
+           AND   (gltrans_misc_id=_p.checkhead_id)
+           AND   ((gltrans_rec) OR (bankrecitem_id IS NOT NULL)) )
          UNION ALL
          SELECT sltrans_id AS trans_id
          FROM sltrans
-         WHERE ((sltrans_doctype='CK')
-           AND  (sltrans_misc_id=_p.checkhead_id)
-           AND  (sltrans_rec)) ) AS data;
+              LEFT OUTER JOIN bankrecitem ON (bankrecitem_source='GL' AND bankrecitem_source_id=sltrans_id)
+         WHERE ( (sltrans_doctype='CK')
+           AND   (sltrans_misc_id=_p.checkhead_id)
+           AND   ((sltrans_rec) OR (bankrecitem_id IS NOT NULL)) )
+       ) AS data;
   IF (FOUND) THEN
     RETURN -14;
   END IF;
