@@ -1,4 +1,4 @@
-﻿-- Function: copyproject(integer, text, text, date)
+-- Function: copyproject(integer, text, text, date)
 
 -- DROP the old, existing function as it is no longer used and has different parameters
 DROP FUNCTION copyproject(integer, text, integer);
