@@ -21,6 +21,12 @@ BEGIN
     END IF;
   END IF;
 
+  IF (TG_OP = 'INSERT') THEN
+    IF (SELECT opstage_opinactive FROM opstage WHERE opstage_id=NEW.ophead_opstage_id) THEN
+      NEW.ophead_active := FALSE;
+    END IF;
+  END IF;
+
   RETURN NEW;
 END;
 $$ LANGUAGE 'plpgsql';
