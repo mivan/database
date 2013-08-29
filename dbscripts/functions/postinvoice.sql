@@ -673,6 +673,12 @@ BEGIN
           _totalAmount := _totalAmount - currToCurr(_tmpCurrId, _p.invchead_curr_id,
 						    _appliedAmount, _firstExchDate);
         END IF;
+
+        -- delete the allocation
+        DELETE FROM aropenalloc
+        WHERE (aropenalloc_doctype='I')
+          AND (aropenalloc_doc_id=_p.invchead_id);
+
       END IF;
     END LOOP;
   END IF;
