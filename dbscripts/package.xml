@@ -97,6 +97,7 @@
   <createfunction file="functions/changeprdate.sql"                   name="changeprdate" />
   <createfunction file="functions/changeprqty.sql"                    name="changeprqty" />
   <createfunction file="functions/changepseudofkeypointers.sql"       name="changepseudofkeypointers" />
+  <createfunction file="functions/changepurchasedropship.sql"         name="changepurchasedropship" />
   <createfunction file="functions/changewodates.sql"                  name="changewodates" />
   <createfunction file="functions/changewoproject.sql"                name="changewoproject" />
   <createfunction file="functions/changewoqty.sql"                    name="changewoqty" />
