@@ -1,7 +1,11 @@
--- Group: orderActivityByProject
+-- Group: projects
 -- Name:  detail
--- Notes: All projects
-
+-- Notes: 
+--        Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple.
+--        See www.xtuple.com/CPAL for the full text of the software license.
+--        
+--        xTuple version 4.2.0 - Modified to significantly amend the display of this screen and its filters.
+--
 SELECT *, 
   formatQty(qty) AS f_qty,
   formatMoney(value) AS f_value,
@@ -14,6 +18,7 @@ SELECT prj_id AS id,
        1 AS type,
        '0' AS subtype,
        0 AS section,
+       prj_id AS project,
        NULL  AS section_qtdisplayrole,
        prj_number AS name,
        CASE                         
@@ -21,7 +26,9 @@ SELECT prj_id AS id,
            WHEN prj_status = 'O' THEN <? value('inprocess') ?>
            WHEN prj_status = 'P' THEN <? value('planning') ?>
        END AS status,
-       prjtype_code AS project_type,
+       COALESCE(prjtype_descr, 'Undefined') AS project_type,
+       prj_username,
+       prj_owner_username,
        prj_name AS item,
        prj_descrip AS descrip,
        crmacct_name AS customer, 
@@ -45,13 +52,13 @@ SELECT prj_id AS id,
          WHEN (prj_status = 'O' AND prj_due_date BETWEEN current_date AND current_date + (fetchmetricvalue('ProjectDueDateWarning')||' days')::interval) THEN 'orange' 
          END AS due_qtforegroundrole,
        0 AS xtindentrole
-  FROM prj
+  FROM prj()
   LEFT OUTER JOIN prjtype ON (prj_prjtype_id=prjtype_id)
   LEFT OUTER JOIN crmacct ON (prj_crmacct_id=crmacct_id)
   LEFT OUTER JOIN cntct ON (crmacct_cntct_id_1=cntct_id)
   LEFT OUTER JOIN addr ON (cntct_addr_id=addr_id)
 
- WHERE (prj_id = <? value("prj_id") ?> )
+ WHERE (1=1 )
  
 UNION ALL
 ----- TASKS -----
@@ -59,10 +66,13 @@ SELECT DISTINCT -1 AS id,
        3 AS type,
        '0' AS subtype,
        1 AS section,
-       'Tasks' AS section_qtdisplayrole,
-       'Tasks' AS name,
+       prjtask_prj_id AS project,
+       <? value('tasks') ?> AS section_qtdisplayrole,
+       <? value('tasks') ?> AS name,
        NULL::text AS status,
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        NULL::text AS item,
        NULL::text AS descrip,
        NULL::text AS customer,
@@ -85,13 +95,14 @@ SELECT DISTINCT -1 AS id,
         
        NULL::text AS due_qtforegroundrole,
        1 AS xtindentrole
-
+    FROM prjtask
 UNION ALL
 
 SELECT prjtask_id AS id,
        5 AS type,
        '0' AS subtype,
        1 AS section,
+       prjtask_prj_id AS project,
        NULL AS section_qtdisplayrole,
        prjtask_number AS name,
        CASE                         
@@ -100,6 +111,8 @@ SELECT prjtask_id AS id,
            WHEN prjtask_status = 'P' THEN <? value('planning') ?>
        END AS status,
        NULL::text AS project_type,
+       prjtask_username AS prj_username,
+       prjtask_owner_username AS prj_owner_username,
        prjtask_name AS item,
        prjtask_descrip AS descrip,
        cust_name as customer,
@@ -129,8 +142,8 @@ SELECT prjtask_id AS id,
   LEFT OUTER JOIN cntct ON (cust_corrcntct_id=cntct_id)
   LEFT OUTER JOIN addr ON (cntct_addr_id=addr_id)
 
- WHERE (prjtask_prj_id = <? value("prj_id") ?> )
- GROUP BY custinfo.cust_name, prjtask.prjtask_id, addr.addr_city, addr.addr_state, cntct_name
+ WHERE (1=1 )
+ GROUP BY prjtask_prj_id, custinfo.cust_name, prjtask.prjtask_id, addr.addr_city, addr.addr_state, cntct_name, prjtask.prjtask_number, prjtask.prjtask_status, prjtask_username, prjtask.prjtask_owner_username, prjtask_name, prjtask_descrip, prjtask_due_date, prjtask_assigned_date, prjtask_start_date, prjtask_completed_date, prjtask_hours_budget, prjtask_hours_actual, prjtask_exp_budget, prjtask_exp_actual
    
 <? if exists("showSo") ?>
 UNION ALL
@@ -140,10 +153,13 @@ SELECT DISTINCT -1 AS id,
        10 AS type,
        '0' AS subtype,
        1 AS section,
+       prj_id AS project,
        <? value("quotes") ?> AS section_qtdisplayrole,
        <? value("quotes") ?> AS name,
        NULL::text AS status,
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        NULL::text AS item,
        NULL::text AS descrip,
        NULL::text AS customer,
@@ -167,21 +183,15 @@ SELECT DISTINCT -1 AS id,
        NULL::text AS due_qtforegroundrole,
        1 AS xtindentrole
   FROM quhead
-<? if exists("owner_username") ?>
-    JOIN prj ON (prj_id=quhead_prj_id
-            AND ((prj_owner_username=<? value("owner_username") ?>) OR (prj_username=<? value("owner_username") ?>)))
-<? endif ?>
- WHERE (quhead_prj_id = <? value("prj_id") ?>)
-<? if exists("owner_username") ?>
-   AND (quhead_owner_username=<? value("owner_username") ?>)
-<? endif ?>
-
+  JOIN prj() ON (quhead_prj_id=prj_id)
+ WHERE (1=1)
 UNION ALL
 
 SELECT quhead_id AS id, 
        15 AS type,
        quhead_number AS subtype,
        1 AS section,
+       prj_id AS project,
        <? value("quotes") ?> AS section_qtdisplayrole,
        quhead_number AS name,
        CASE WHEN (quhead_status = 'C') THEN 
@@ -194,6 +204,8 @@ SELECT quhead_id AS id,
          <? value("expired") ?>
        END AS status,
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        NULL::text AS item,
        NULL::text AS descrip,
        cust_name AS customer,
@@ -217,17 +229,11 @@ SELECT quhead_id AS id,
        NULL::text AS due_qtforegroundrole,
        2 AS xtindentrole
   FROM quhead
+  JOIN prj() ON (quhead_prj_id=prj_id)
   JOIN custinfo ON (quhead_cust_id=cust_id)
-<? if exists("owner_username") ?>
-    JOIN prj ON (prj_id=quhead_prj_id
-            AND ((prj_owner_username=<? value("owner_username") ?>) OR (prj_username=<? value("owner_username") ?>)))
-<? endif ?>
     JOIN quitem ON (quitem_quhead_id = quhead_id)
- WHERE (quhead_prj_id = <? value("prj_id") ?>)
-<? if exists("owner_username") ?>
-   AND (quhead_owner_username=<? value("owner_username") ?>)
-<? endif ?>
-GROUP BY quhead_id, quhead_number, quhead_status, quhead_expire, quhead_freight, quhead_misc, custinfo.cust_name
+ WHERE (1=1)
+GROUP BY prj_id, quhead_id, quhead_number, quhead_status, quhead_expire, quhead_freight, quhead_misc, custinfo.cust_name
 
 UNION ALL
 
@@ -235,6 +241,7 @@ SELECT quitem_id AS id,
        17 AS type,
        quhead_number AS subtype,
        1 AS section,
+       prj_id AS project,
        <? value("quotes") ?> AS section_qtdisplayrole,
        quitem_linenumber::text AS name, 
        CASE WHEN (quhead_status = 'C') THEN 
@@ -244,9 +251,11 @@ SELECT quitem_id AS id,
             WHEN (COALESCE(quhead_expire, current_date + 1) > current_date) THEN
          <? value("open") ?>
             ELSE
-         <? value("Expired") ?>
+         <? value("expired") ?>
        END AS status,
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        item_number AS item,
        item_descrip1 || ' ' || item_descrip2 AS descrip,
        NULL::text AS customer,
@@ -265,23 +274,16 @@ SELECT quitem_id AS id,
        NULL::numeric AS hrs_balance,
        NULL::numeric AS exp_budget,
        NULL::numeric AS exp_actual,
-       NULL::numeric AS exp_balance,
-        
+       NULL::numeric AS exp_balance, 
        NULL::text AS due_qtforegroundrole,
        3 AS xtindentrole
   FROM quhead
-<? if exists("owner_username") ?>
-    JOIN prj ON (prj_id=quhead_prj_id
-            AND ((prj_owner_username=<? value("owner_username") ?>) OR (prj_username=<? value("owner_username") ?>)))
-<? endif ?>
+  JOIN prj() ON (quhead_prj_id=prj_id)
     JOIN quitem ON (quitem_quhead_id = quhead_id)
     JOIN uom ON (quitem_qty_uom_id = uom_id)
     JOIN itemsite ON (quitem_itemsite_id = itemsite_id)
     JOIN item ON (itemsite_item_id = item_id)
- WHERE (quhead_prj_id = <? value("prj_id") ?>)
-<? if exists("owner_username") ?>
-   AND (quhead_owner_username=<? value("owner_username") ?>)
-<? endif ?>
+ WHERE (1=1)
 
 UNION ALL
 
@@ -289,10 +291,13 @@ SELECT quhead_id AS id,
        18 AS type,
        quhead_number AS subtype,
        1 AS section,
+       prj_id AS project,
        <? value("quotes") ?> AS section_qtdisplayrole,
        <? value("total") ?> AS name,
        NULL AS status,
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        NULL::text AS item,
        NULL::text AS descrip,
        NULL::text AS customer,
@@ -316,16 +321,10 @@ SELECT quhead_id AS id,
 	NULL::text AS due_qtforegroundrole,
        2 AS xtindentrole
   FROM quhead
-<? if exists("owner_username") ?>
-    JOIN prj ON (prj_id=quhead_prj_id
-            AND ((prj_owner_username=<? value("owner_username") ?>) OR (prj_username=<? value("owner_username") ?>)))
-<? endif ?>
+    JOIN prj() ON (quhead_prj_id=prj_id)
     JOIN quitem ON (quitem_quhead_id = quhead_id)
- WHERE (quhead_prj_id = <? value("prj_id") ?>)
-<? if exists("owner_username") ?>
-   AND (quhead_owner_username=<? value("owner_username") ?>)
-<? endif ?>
-GROUP BY quhead_id, quhead_number
+ WHERE (1=1)
+GROUP BY prj_id, quhead_id, quhead_number
 
 UNION ALL
 
@@ -333,10 +332,13 @@ SELECT -1 AS id,
        19 AS type,
        MAX(quhead_number) AS subtype,
        1 AS section,
+       prj_id AS project,
        <? value("quotes") ?> AS section_qtdisplayrole,
        <? value("total") ?> || ' ' || <? value("quotes") ?> AS name,
        NULL AS status,
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        NULL::text AS item,
        NULL::text AS descrip,
        NULL::text AS customer,
@@ -360,15 +362,10 @@ SELECT -1 AS id,
 	NULL::text AS due_qtforegroundrole,
        2 AS xtindentrole
   FROM quhead
-<? if exists("owner_username") ?>
-    JOIN prj ON (prj_id=quhead_prj_id
-            AND ((prj_owner_username=<? value("owner_username") ?>) OR (prj_username=<? value("owner_username") ?>)))
-<? endif ?>
+    JOIN prj() ON (quhead_prj_id=prj_id)
     JOIN quitem ON (quitem_quhead_id = quhead_id)
- WHERE (quhead_prj_id = <? value("prj_id") ?>)
-<? if exists("owner_username") ?>
-   AND (quhead_owner_username=<? value("owner_username") ?>)
-<? endif ?>
+ WHERE (1=1)
+ GROUP BY prj_id
 
 UNION ALL
 
@@ -377,10 +374,13 @@ SELECT DISTINCT -1 AS id,
        20 AS type,
        '0' AS subtype,
        2 AS section,
+       prj_id AS project,
        <? value("sos") ?> AS section_qtdisplayrole,
        <? value("sos") ?> AS name,
        NULL::text AS status,
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        NULL::text AS item,
        NULL::text AS descrip,
        NULL::text AS customer,
@@ -404,11 +404,8 @@ SELECT DISTINCT -1 AS id,
 	NULL::text AS due_qtforegroundrole,
        1 AS xtindentrole
   FROM cohead
-<? if exists("owner_username") ?>
-    JOIN prj ON (prj_id=cohead_prj_id
-            AND ((prj_owner_username=<? value("owner_username") ?>) OR (prj_username=<? value("owner_username") ?>)))
-<? endif ?>
- WHERE (cohead_prj_id = <? value("prj_id") ?>)
+    JOIN prj() ON (cohead_prj_id=prj_id)
+ WHERE (1=1)
 
 UNION ALL
 
@@ -416,6 +413,7 @@ SELECT cohead_id AS id,
        25 AS type,
        cohead_number::text AS subtype,
        2 AS section,
+       prj_id AS project,
        <? value("sos") ?> AS section_qtdisplayrole,
        cohead_number::text AS name,
       COALESCE((SELECT 
@@ -439,6 +437,8 @@ SELECT cohead_id AS id,
                  LIMIT 1) AS sts) ,'O')
         AS status,
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        shipto_num AS item,
        shipto_name AS descrip,
        cust_name AS customer,
@@ -462,15 +462,12 @@ SELECT cohead_id AS id,
 	NULL::text AS due_qtforegroundrole,
        2 AS xtindentrole
   FROM cohead
+    JOIN prj() ON (cohead_prj_id=prj_id)
     JOIN custinfo ON (cust_id = cohead_cust_id)
     LEFT OUTER JOIN shiptoinfo ON (cohead_shipto_id = shipto_id)
-<? if exists("owner_username") ?>
-    JOIN prj ON (prj_id=cohead_prj_id
-            AND ((prj_owner_username=<? value("owner_username") ?>) OR (prj_username=<? value("owner_username") ?>)))
-<? endif ?>
     JOIN coitem ON (coitem_cohead_id = cohead_id)
- WHERE (cohead_prj_id = <? value("prj_id") ?>)
-GROUP BY cohead_id, cohead_number, shipto_num, shipto_name, cust_name
+ WHERE (1=1)
+GROUP BY prj_id,cohead_id, cohead_number, shipto_num, shipto_name, cust_name
 
 UNION ALL
 
@@ -478,16 +475,19 @@ SELECT coitem_id AS id,
        27 AS type,
        cohead_number::text AS subtype,
        2 AS section,
+       prj_id AS project,
        <? value("sos") ?> AS section_qtdisplayrole,
        coitem_linenumber::text AS name, 
        CASE WHEN (coitem_status = 'O') THEN
          <? value("open") ?>
             WHEN (coitem_status = 'C') THEN
-         <? value("closed") ?>
+         <? value("closed" ?>
             WHEN (coitem_status = 'X') THEN
          <? value("canceled") ?>
        END AS status,
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        item_number AS item,
        item_descrip1 || ' ' || item_descrip2 AS descrip,
        NULL::text AS customer,
@@ -511,15 +511,12 @@ SELECT coitem_id AS id,
 	NULL::text AS due_qtforegroundrole,
        3 AS xtindentrole
   FROM cohead
-<? if exists("owner_username") ?>
-    JOIN prj ON (prj_id=cohead_prj_id
-            AND ((prj_owner_username=<? value("owner_username") ?>) OR (prj_username=<? value("owner_username") ?>)))
-<? endif ?>
+    JOIN prj() ON (cohead_prj_id=prj_id)
     JOIN coitem ON (coitem_cohead_id = cohead_id)
     JOIN uom ON (coitem_qty_uom_id = uom_id)
     JOIN itemsite ON (coitem_itemsite_id = itemsite_id)
     JOIN item ON (itemsite_item_id = item_id)
- WHERE (cohead_prj_id = <? value("prj_id") ?>)
+ WHERE (1=1)
 
 UNION ALL
 
@@ -527,10 +524,13 @@ SELECT cohead_id AS id,
        28 AS type,
        cohead_number::text AS subtype,
        2 AS section,
+       prj_id AS project,
        <? value("sos") ?> AS section_qtdisplayrole,
        <? value("total") ?> AS name,
        NULL AS status,
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        NULL::text AS item,
        NULL::text AS descrip,
        NULL::text AS customer,
@@ -554,13 +554,10 @@ SELECT cohead_id AS id,
 	NULL::text AS due_qtforegroundrole,
        2 AS xtindentrole
   FROM cohead
-<? if exists("owner_username") ?>
-    JOIN prj ON (prj_id=cohead_prj_id
-            AND ((prj_owner_username=<? value("owner_username") ?>) OR (prj_username=<? value("owner_username") ?>)))
-<? endif ?>
+    JOIN prj() ON (cohead_prj_id=prj_id)
     JOIN coitem ON (coitem_cohead_id = cohead_id)
- WHERE (cohead_prj_id = <? value("prj_id") ?>)
-GROUP BY cohead_id, cohead_number
+ WHERE (1=1)
+GROUP BY prj_id,cohead_id, cohead_number
 
 UNION ALL
 
@@ -568,10 +565,13 @@ SELECT -1 AS id,
        29 AS type,
        MAX(cohead_number::text) AS subtype,
        2 AS section,
+       prj_id AS project,
        <? value("sos") ?> AS section_qtdisplayrole,
        <? value("total") ?> || ' ' || <? value("sos") ?> AS name,
        NULL AS status,
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        NULL::text AS item,
        NULL::text AS descrip,
        NULL::text AS customer,
@@ -595,13 +595,11 @@ SELECT -1 AS id,
 	NULL::text AS due_qtforegroundrole,
        2 AS xtindentrole
   FROM cohead
-<? if exists("owner_username") ?>
-    JOIN prj ON (prj_id=cohead_prj_id
-            AND ((prj_owner_username=<? value("owner_username") ?>) OR (prj_username=<? value("owner_username") ?>)))
-<? endif ?>
+    JOIN prj() ON (cohead_prj_id=prj_id)
     JOIN coitem ON (coitem_cohead_id = cohead_id)
- WHERE (cohead_prj_id = <? value("prj_id") ?>)
-
+ WHERE (1=1)
+ GROUP BY prj_id
+ 
 UNION ALL
 
 ------ INVOICES -------
@@ -609,10 +607,13 @@ SELECT DISTINCT -1 AS id,
        30 AS type,
        '0' AS subtype,
        3 AS section,
+       prj_id AS project,
        <? value("invoices") ?> AS section_qtdisplayrole,
        <? value("invoices") ?> AS name,
        NULL::text AS status,
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        NULL::text AS item,
        NULL::text AS descrip,
        NULL::text AS customer,
@@ -636,11 +637,8 @@ SELECT DISTINCT -1 AS id,
 	NULL::text AS due_qtforegroundrole,
        1 AS xtindentrole
   FROM invchead
-<? if exists("owner_username") ?>
-    JOIN prj ON (prj_id=invchead_prj_id
-            AND ((prj_owner_username=<? value("owner_username") ?>) OR (prj_username=<? value("owner_username") ?>)))
-<? endif ?>
- WHERE (invchead_prj_id = <? value("prj_id") ?>)
+  JOIN prj() ON (invchead_prj_id=prj_id)
+ WHERE (1=1)
 
 UNION ALL
 
@@ -648,6 +646,7 @@ SELECT invchead_id AS id,
        35 AS type,
        invchead_invcnumber::text AS subtype,
        3 AS section,
+       prj_id AS project,
        <? value("invoices") ?> AS section_qtdisplayrole,
        invchead_invcnumber::text AS name,
        CASE WHEN (invchead_posted) THEN
@@ -655,6 +654,8 @@ SELECT invchead_id AS id,
        ELSE <? value("unposted") ?>
        END AS status,
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        shipto_num AS item,
        shipto_name AS descrip,
        cust_name AS customer,
@@ -678,15 +679,13 @@ SELECT invchead_id AS id,
 	NULL::text AS due_qtforegroundrole,
        2 AS xtindentrole
   FROM invchead
+    JOIN prj() ON (invchead_prj_id=prj_id)
     JOIN custinfo ON (cust_id=invchead_cust_id)
     LEFT OUTER JOIN shiptoinfo ON (invchead_shipto_id = shipto_id)
-<? if exists("owner_username") ?>
-    JOIN prj ON (prj_id=invchead_prj_id
-            AND ((prj_owner_username=<? value("owner_username") ?>) OR (prj_username=<? value("owner_username") ?>)))
-<? endif ?>
+
     JOIN invcitem ON (invcitem_invchead_id = invchead_id)
- WHERE (invchead_prj_id = <? value("prj_id") ?>)
-GROUP BY invchead_id, invchead_invcnumber, shipto_num, shipto_name, invchead_freight, invchead_misc_amount, invchead_posted, cust_name
+ WHERE (1=1)
+GROUP BY prj_id,invchead_id, invchead_invcnumber, shipto_num, shipto_name, invchead_freight, invchead_misc_amount, invchead_posted, cust_name
 
 UNION ALL
 
@@ -694,6 +693,7 @@ SELECT invcitem_id AS id,
        37 AS type,
        invchead_invcnumber::text AS subtype,
        3 AS section,
+       prj_id AS project,
        <? value("invoices") ?> AS section_qtdisplayrole,
        invcitem_linenumber::text AS name, 
        CASE WHEN (invchead_posted) THEN
@@ -701,6 +701,8 @@ SELECT invcitem_id AS id,
        ELSE <? value("unposted") ?>
        END AS status,
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        COALESCE(item_number,invcitem_number) AS item,
        COALESCE(item_descrip1 || ' ' || item_descrip2,invcitem_descrip) AS descrip,
        NULL::text AS customer,
@@ -724,14 +726,11 @@ SELECT invcitem_id AS id,
 	NULL::text AS due_qtforegroundrole,
        3 AS xtindentrole
   FROM invchead
-<? if exists("owner_username") ?>
-    JOIN prj ON (prj_id=invchead_prj_id
-            AND ((prj_owner_username=<? value("owner_username") ?>) OR (prj_username=<? value("owner_username") ?>)))
-<? endif ?>
+    JOIN prj() ON (invchead_prj_id=prj_id)
     JOIN invcitem ON (invcitem_invchead_id = invchead_id)
     LEFT OUTER JOIN item ON (invcitem_item_id = item_id)
     LEFT OUTER JOIN uom ON (invcitem_qty_uom_id = uom_id)
- WHERE (invchead_prj_id = <? value("prj_id") ?>)
+ WHERE (1=1)
 
 UNION ALL
 
@@ -739,10 +738,13 @@ SELECT invchead_id AS id,
        38 AS type,
        invchead_invcnumber::text AS subtype,
        3 AS section,
+       prj_id AS project,
        <? value("invoices") ?> AS section_qtdisplayrole,
        <? value("total") ?> AS name,
        NULL AS status,
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        NULL::text AS item,
        NULL::text AS descrip,
        NULL::text AS customer,
@@ -766,13 +768,10 @@ SELECT invchead_id AS id,
 	NULL::text AS due_qtforegroundrole,
        2 AS xtindentrole
   FROM invchead
-<? if exists("owner_username") ?>
-    JOIN prj ON (prj_id=invchead_prj_id
-            AND ((prj_owner_username=<? value("owner_username") ?>) OR (prj_username=<? value("owner_username") ?>)))
-<? endif ?>
+    JOIN prj() ON (invchead_prj_id=prj_id)
     JOIN invcitem ON (invcitem_invchead_id = invchead_id)
- WHERE (invchead_prj_id = <? value("prj_id") ?>)
-GROUP BY invchead_id, invchead_invcnumber
+ WHERE (1=1)
+GROUP BY prj_id,invchead_id, invchead_invcnumber
 
 UNION ALL
 
@@ -780,10 +779,13 @@ SELECT -1 AS id,
        39 AS type,
        MAX(invchead_invcnumber::text) AS subtype,
        3 AS section,
+       prj_id AS project,
        <? value("invoices") ?> AS section_qtdisplayrole,
        <? value("total") ?> || ' ' || <? value("invoices") ?> AS name,
        NULL AS status,
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        NULL::text AS item,
        NULL::text AS descrip,
        NULL::text AS customer,
@@ -807,15 +809,12 @@ SELECT -1 AS id,
 	NULL::text AS due_qtforegroundrole,
        2 AS xtindentrole
   FROM invchead
-<? if exists("owner_username") ?>
-    JOIN prj ON (prj_id=invchead_prj_id
-            AND ((prj_owner_username=<? value("owner_username") ?>) OR (prj_username=<? value("owner_username") ?>)))
-<? endif ?>
+    JOIN prj() ON (invchead_prj_id=prj_id)
     JOIN invcitem ON (invcitem_invchead_id = invchead_id)
- WHERE (invchead_prj_id = <? value("prj_id") ?>)
-
-<? endif ?>
-
+ WHERE (1=1)
+ GROUP BY prj_id
+ 
+<? endif ?>  
 
 <? if exists("showWo") ?>
 UNION ALL
@@ -825,10 +824,13 @@ SELECT DISTINCT -1 AS id,
        40 AS type,
        '0' AS subtype,
        4 AS section,
+       prj_id AS project,
        <? value("wos") ?> AS section_qtdisplayrole,
        <? value("wos") ?> AS name,
        NULL::text AS status,
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        NULL::text AS item,
        NULL::text AS descrip,
        NULL::text AS customer,
@@ -851,12 +853,9 @@ SELECT DISTINCT -1 AS id,
         
 	NULL::text AS due_qtforegroundrole,
        1 AS xtindentrole
-  FROM wo
-<? if exists("owner_username") ?>
-    JOIN prj ON (prj_id=wo_prj_id
-            AND ((prj_owner_username=<? value("owner_username") ?>) OR (prj_username=<? value("owner_username") ?>)))
-<? endif ?>
- WHERE (wo_prj_id = <? value("prj_id") ?>)
+  FROM wo 
+  JOIN prj() ON (wo_prj_id=prj_id)
+ WHERE (1=1)
 
 UNION ALL
 
@@ -864,6 +863,7 @@ SELECT wo_id AS id,
        45 AS type,
        formatWoNumber(wo_id) AS subtype,
        4 AS section,
+       prj_id AS project,
        <? value("wos") ?> AS section_qtdisplayrole,
        formatWoNumber(wo_id) AS name,
        CASE WHEN (wo_status = 'O') THEN
@@ -875,9 +875,11 @@ SELECT wo_id AS id,
             WHEN (wo_status = 'I') THEN
          <? value("inprocess") ?>
             WHEN (wo_status = 'C') THEN
-         <? value("closed") ?>
+         <? value("closed" ?>
        END AS status,
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        item_number AS item,
        item_descrip1 || ' ' || item_descrip2 AS descrip,
        NULL::text AS customer,
@@ -901,14 +903,11 @@ SELECT wo_id AS id,
 	NULL::text AS due_qtforegroundrole,
        2 AS xtindentrole
   FROM wo
-<? if exists("owner_username") ?>
-    JOIN prj ON (prj_id=wo_prj_id
-            AND ((prj_owner_username=<? value("owner_username") ?>) OR (prj_username=<? value("owner_username") ?>)))
-<? endif ?>
+    JOIN prj() ON (wo_prj_id=prj_id)
     JOIN itemsite ON (itemsite_id=wo_itemsite_id)
     JOIN item ON (itemsite_item_id=item_id)
     JOIN uom ON (item_inv_uom_id=uom_id)
- WHERE (wo_prj_id = <? value("prj_id") ?>)
+ WHERE (1=1)
 
 UNION ALL
 
@@ -916,10 +915,13 @@ SELECT -1 AS id,
        49 AS type,
        MAX(formatWoNumber(wo_id)) AS subtype,
        4 AS section,
+       prj_id AS project,
        <? value("wos") ?> AS section_qtdisplayrole,
        <? value("total") ?> || ' ' || <? value("wos") ?> AS name,
        NULL AS status,
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        NULL::text AS item,
        NULL::text AS descrip,
        NULL::text AS customer,
@@ -943,27 +945,27 @@ SELECT -1 AS id,
 	NULL::text AS due_qtforegroundrole,
        2 AS xtindentrole
   FROM wo
-<? if exists("owner_username") ?>
-    JOIN prj ON (prj_id=wo_prj_id
-            AND ((prj_owner_username=<? value("owner_username") ?>) OR (prj_username=<? value("owner_username") ?>)))
-<? endif ?>
- WHERE (wo_prj_id = <? value("prj_id") ?>)
+     JOIN prj() ON (wo_prj_id=prj_id)
+ WHERE (1=1)
+ GROUP BY prj_id
 
 <? endif ?>
 
 
 <? if exists("showPo") ?>
  UNION ALL
-
 ------ PURCHASE REQUESTS ------
 SELECT DISTINCT -1 AS id, 
        50 AS type,
        '0' AS subtype,
        5 AS section,
+       prj_id AS project,
        <? value("prs") ?> AS section_qtdisplayrole,
        <? value("prs") ?> AS name,
        NULL::text AS status,
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        NULL::text AS item,
        NULL::text AS descrip,
        NULL::text AS customer,
@@ -987,11 +989,8 @@ SELECT DISTINCT -1 AS id,
 	NULL::text AS due_qtforegroundrole,
        1 AS xtindentrole
   FROM pr
-<? if exists("owner_username") ?>
-    JOIN prj ON (prj_id=pr_prj_id
-            AND ((prj_owner_username=<? value("owner_username") ?>) OR (prj_username=<? value("owner_username") ?>)))
-<? endif ?>
- WHERE (pr_prj_id = <? value("prj_id") ?>)
+    JOIN prj() ON (pr_prj_id=prj_id)
+ WHERE (1=1)
 
 UNION ALL
 
@@ -999,10 +998,13 @@ SELECT pr_id AS id,
        55 AS type,
        pr_number::text || '-' || pr_subnumber::text AS subtype,
        5 AS section,
+       prj_id AS project,
        <? value("prs") ?> AS section_qtdisplayrole,
        pr_number::text || '-' || pr_subnumber::text AS name,
        <? value("open") ?> AS status, 
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        item_number AS item,
        (item_descrip1 || ' ' || item_descrip2) AS descrip,
        NULL::text AS customer,
@@ -1026,14 +1028,11 @@ SELECT pr_id AS id,
 	NULL::text AS due_qtforegroundrole,
        2 AS xtindentrole
   FROM pr
-<? if exists("owner_username") ?>
-    JOIN prj ON (prj_id=pr_prj_id
-            AND ((prj_owner_username=<? value("owner_username") ?>) OR (prj_username=<? value("owner_username") ?>)))
-<? endif ?>
+    JOIN prj() ON (pr_prj_id=prj_id)
     JOIN itemsite ON (itemsite_id = pr_itemsite_id)
     JOIN item ON (itemsite_item_id = item_id)
     JOIN uom ON (item_inv_uom_id = uom_id)
- WHERE (pr_prj_id=<? value("prj_id") ?>)
+ WHERE (1=1)
 
 UNION ALL
 
@@ -1041,10 +1040,13 @@ SELECT -1 AS id,
        59 AS type,
        MAX(pr_number::text || '-' || pr_subnumber::text) AS subtype,
        5 AS section,
+       prj_id AS project,
        <? value("prs") ?> AS section_qtdisplayrole,
        <? value("total") ?> || ' ' || <? value("prs") ?> AS name,
        NULL AS status,
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        NULL::text AS item,
        NULL::text AS descrip,
        NULL::text AS customer,       
@@ -1068,14 +1070,12 @@ SELECT -1 AS id,
 	NULL::text AS due_qtforegroundrole,
        2 AS xtindentrole
   FROM pr
-<? if exists("owner_username") ?>
-    JOIN prj ON (prj_id=pr_prj_id
-            AND ((prj_owner_username=<? value("owner_username") ?>) OR (prj_username=<? value("owner_username") ?>)))
-<? endif ?>
+    JOIN prj() ON (pr_prj_id=prj_id)
     JOIN itemsite ON (itemsite_id = pr_itemsite_id)
     JOIN item ON (itemsite_item_id = item_id)
- WHERE (pr_prj_id = <? value("prj_id") ?>)
-
+ WHERE (1=1)
+ GROUP BY prj_id
+ 
 UNION ALL
 
 ------ PURCHASE ORDERS ------
@@ -1083,10 +1083,13 @@ SELECT DISTINCT -1 AS id,
        60 AS type,
        '0' AS subtype,
        6 AS section,
+       prj_id AS project,
        <? value("pos") ?> AS section_qtdisplayrole,
        <? value("pos") ?> AS name,
        NULL::text AS status,
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        NULL::text AS item,
        NULL::text AS descrip,
        NULL::text AS customer,
@@ -1110,11 +1113,8 @@ SELECT DISTINCT -1 AS id,
 	NULL::text AS due_qtforegroundrole,
        1 AS xtindentrole
   FROM poitem
-<? if exists("owner_username") ?>
-    JOIN prj ON (prj_id=poitem_prj_id
-            AND ((prj_owner_username=<? value("owner_username") ?>) OR (prj_username=<? value("owner_username") ?>)))
-<? endif ?>
- WHERE (poitem_prj_id = <? value("prj_id") ?>)
+    JOIN prj() ON (poitem_prj_id=prj_id)
+ WHERE (1=1)
 
 UNION ALL
 
@@ -1122,6 +1122,7 @@ SELECT pohead_id AS id,
        65 AS type,
        pohead_number::text AS subtype,
        6 AS section,
+       prj_id AS project,
        <? value("pos") ?> AS section_qtdisplayrole,
        pohead_number::text AS name,
        CASE WHEN (pohead_status = 'U') THEN
@@ -1129,9 +1130,11 @@ SELECT pohead_id AS id,
             WHEN (pohead_status = 'O') THEN
          <? value("open") ?>
             WHEN (pohead_status = 'C') THEN
-         <? value("closed") ?>
+         <? value("closed" ?>
        END AS status,
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        NULL AS item,
        NULL::text AS descrip,
        NULL::text AS customer,
@@ -1156,12 +1159,9 @@ SELECT pohead_id AS id,
        2 AS xtindentrole
   FROM pohead
     JOIN poitem ON (poitem_pohead_id = pohead_id)
-<? if exists("owner_username") ?>
-    JOIN prj ON (prj_id=poitem_prj_id
-            AND ((prj_owner_username=<? value("owner_username") ?>) OR (prj_username=<? value("owner_username") ?>)))
-<? endif ?>
- WHERE (poitem_prj_id = <? value("prj_id") ?>)
-GROUP BY pohead_id, pohead_number, pohead_freight, pohead_status
+    JOIN prj() ON (poitem_prj_id=prj_id)
+ WHERE (1=1)
+GROUP BY prj_id,pohead_id, pohead_number, pohead_freight, pohead_status
 
 UNION ALL
 
@@ -1169,6 +1169,7 @@ SELECT poitem_id AS id,
        67 AS type,
        pohead_number::text AS subtype,
        6 AS section,
+       prj_id AS project,
        <? value("pos") ?> AS section_qtdisplayrole,
        poitem_linenumber::text AS name, 
        CASE WHEN (poitem_status = 'U') THEN
@@ -1176,9 +1177,11 @@ SELECT poitem_id AS id,
             WHEN (poitem_status = 'O') THEN
          <? value("open") ?>
             WHEN (poitem_status = 'C') THEN
-         <? value("closed") ?>
+         <? value("closed" ?>
        END AS status,
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        COALESCE(item_number,poitem_vend_item_number) AS item,
        COALESCE((item_descrip1 || ' ' || item_descrip2),poitem_vend_item_descrip) AS descrip,
        NULL::text AS customer,
@@ -1203,13 +1206,10 @@ SELECT poitem_id AS id,
        3 AS xtindentrole
   FROM pohead
     JOIN poitem ON (poitem_pohead_id = pohead_id)
-<? if exists("owner_username") ?>
-    JOIN prj ON (prj_id=poitem_prj_id
-            AND ((prj_owner_username=<? value("owner_username") ?>) OR (prj_username=<? value("owner_username") ?>)))
-<? endif ?>
+    JOIN prj() ON (poitem_prj_id=prj_id)
     LEFT OUTER JOIN itemsite ON (poitem_itemsite_id=itemsite_id)
     LEFT OUTER JOIN item ON (itemsite_item_id = item_id)
- WHERE (poitem_prj_id = <? value("prj_id") ?>)
+ WHERE (1=1)
 
 UNION ALL
 
@@ -1217,10 +1217,13 @@ SELECT pohead_id AS id,
        68 AS type,
        pohead_number::text AS subtype,
        6 AS section,
+       prj_id AS project,
        <? value("pos") ?> AS section_qtdisplayrole,
        <? value("total") ?> AS name,
        NULL AS status,
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        NULL::text AS item,
        NULL::text AS descrip,
        NULL::text AS customer,
@@ -1245,12 +1248,9 @@ SELECT pohead_id AS id,
        2 AS xtindentrole
   FROM pohead
     JOIN poitem ON (poitem_pohead_id = pohead_id)
-<? if exists("owner_username") ?>
-    JOIN prj ON (prj_id=poitem_prj_id
-            AND ((prj_owner_username=<? value("owner_username") ?>) OR (prj_username=<? value("owner_username") ?>)))
-<? endif ?>
- WHERE (poitem_prj_id = <? value("prj_id") ?>)
-GROUP BY pohead_id, pohead_number
+    JOIN prj() ON (poitem_prj_id=prj_id)
+ WHERE (1=1)
+GROUP BY prj_id,pohead_id, pohead_number
 
 UNION ALL
 
@@ -1258,10 +1258,13 @@ SELECT -1 AS id,
        69 AS type,
        MAX(pohead_number::text) AS subtype,
        6 AS section,
-       <? value("sos") ?> AS section_qtdisplayrole,
+       prj_id AS project,
+       'qty' AS section_qtdisplayrole,
        <? value("total") ?> || ' ' || <? value("pos") ?> AS name,
        NULL AS status,
        NULL::text AS project_type,
+       NULL::text AS prj_username,
+       NULL::text AS prj_owner_username,
        NULL::text AS item,
        NULL::text AS descrip,
        NULL::text AS customer,
@@ -1286,13 +1289,87 @@ SELECT -1 AS id,
        2 AS xtindentrole
   FROM pohead
     JOIN poitem ON (poitem_pohead_id = pohead_id)
-<? if exists("owner_username") ?>
-    JOIN prj ON (prj_id=poitem_prj_id
-            AND ((prj_owner_username=<? value("owner_username") ?>) OR (prj_username=<? value("owner_username") ?>)))
-<? endif ?>
- WHERE (poitem_prj_id = <? value("prj_id") ?>)
+    JOIN prj() ON (poitem_prj_id=prj_id)
+ WHERE (1=1)
+ GROUP BY prj_id 
 
 <? endif ?>
 
 ) data
-ORDER BY section, subtype, type, id;
+
+WHERE (true)
+<? if exists("search_pattern") ?>
+   AND project IN (SELECT prj_id FROM prj WHERE ( (prj_number ~* <? value("search_pattern") ?>)
+     OR  (prj_name ~* <? value("search_pattern") ?>)
+     OR  (prj_descrip ~* <? value("search_pattern") ?>) ))
+<? endif ?>
+<? if exists("username") ?>
+  AND prj_username=<? value("username") ?> OR prj_owner_username=<? value("username") ?>)
+<? endif ?>
+<? if exists("assigned_username") ?> 
+  AND prj_username=<? value("assigned_username") ?>) 
+<? elseif exists("assigned_usr_pattern") ?>
+  AND prj_username ~ <? value("assigned_usr_pattern") ?>) 
+<? endif ?>
+<? if exists("owner_username") ?> 
+  AND prj_owner_username=<? value("owner_username") ?>)
+<? elseif exists("owner_usr_pattern") ?>
+  AND prj_owner_username ~ <? value("owner_usr_pattern") ?>) 
+<? endif ?>
+<? if exists("crmacct_id") ?>
+  AND project IN (SELECT prj_id FROM prj WHERE (prj_crmacct_id=<? value("crmacct_id") ?>))
+<? endif ?>
+<? if exists("cntct_id") ?>
+  AND project IN (SELECT prj_id FROM prj WHERE (prj_cntct_id=<? value("cntct_id") ?>))
+<? endif ?>
+<? if exists("startStartDate") ?>
+  AND project IN (SELECT prj_id FROM prj WHERE (prj_start_date >= <? value("startStartDate") ?>))
+<? endif ?>
+<? if exists("startEndDate") ?>
+  AND project IN (SELECT prj_id FROM prj WHERE (prj_start_date <= <? value("startEndDate") ?>))
+<? endif ?>
+<? if exists("dueStartDate") ?>
+  AND project IN (SELECT prj_id FROM prj WHERE (prj_due_date >= <? value("dueStartDate") ?>))
+<? endif ?>
+<? if exists("dueEndDate") ?>
+  AND project IN (SELECT prj_id FROM prj WHERE (prj_due_date <= <? value("dueEndDate") ?>))
+<? endif ?>
+<? if exists("assignedStartDate") ?>
+  AND project IN (SELECT prj_id FROM prj WHERE (prj_assigned_date >= <? value("assignedStartDate") ?>))
+<? endif ?>
+<? if exists("assignedEndDate") ?>
+  AND project IN (SELECT prj_id FROM prj WHERE (prj_assigned_date <= <? value("assignedEndDate") ?>))
+<? endif ?>
+<? if exists("completedStartDate") ?>
+  AND project IN (SELECT prj_id FROM prj WHERE (prj_completed_date >= <? value("completedStartDate") ?>))
+<? endif ?>
+<? if exists("completedEndDate") ?>
+  AND project IN (SELECT prj_id FROM prj WHERE (prj_completed_date <= <? value("completedEndDate") ?>))
+<? endif ?>
+<? if not exists("showComplete") ?>
+  AND project IN (SELECT prj_id FROM prj WHERE prj_status <> 'C')
+<? endif ?>
+<? if exists("prj_id") ?>
+  AND (project=<? value("prj_id") ?>)
+<? endif ?>
+<? if exists("prjtype_id") ?>
+  AND project IN (SELECT prj_id FROM prj WHERE (prj_prjtype_id=<? value("prjtype_id") ?>))
+<? endif ?>
+<? if exists("project_task") ?>
+  AND project IN (SELECT DISTINCT prjtask_prj_id FROM prjtask where ((prjtask_number ~* <? value("project_task") ?>)
+						OR (prjtask_name ~* <? value("project_task") ?>)
+						OR (prjtask_descrip ~* <? value("project_task") ?>)))
+<? endif ?>
+<? if exists("cohead_id") ?>
+  AND project IN (SELECT cohead_prj_id FROM cohead where cohead_id=<? value("cohead_id") ?>)
+<? endif ?>
+<? if exists("wo_id") ?>
+  AND project IN (SELECT wo_prj_id FROM wo WHERE wo_id=<? value("wo_id") ?>)
+<? endif ?>
+<? if exists("pohead_id") ?>
+  AND project IN (SELECT poitem_prj_id FROM pohead JOIN poitem ON (pohead_id=poitem_pohead_id) 
+			WHERE pohead_id=<? value("pohead_id") ?>)
+<? endif ?>
+
+
+ORDER BY project, section, subtype, type, id;
