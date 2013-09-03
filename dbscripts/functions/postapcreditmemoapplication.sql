@@ -109,11 +109,12 @@ BEGIN
     END IF;
   END IF;
 
-  IF (_src.apopen_accnt_id > -1) THEN
-    _apaccntid := _src.apopen_accnt_id;
-  ELSE 
+-- do not post gain/loss to alternate prepaid
+--  IF (_src.apopen_accnt_id > -1) THEN
+--    _apaccntid := _src.apopen_accnt_id;
+--  ELSE 
     _apaccntid := findAPAccount(_src.apopen_vend_id);
-  END IF;
+--  END IF;
 
   PERFORM insertGLTransaction(fetchJournalNumber('AP-MISC'), 'A/P', 'CM',
                             _src.apopen_docnumber, 'CM Application',
