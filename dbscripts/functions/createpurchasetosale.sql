@@ -242,8 +242,12 @@ BEGIN
   WHERE (itemtax_item_id = _i.itemsrc_item_id);
 
   IF (pPrice IS NULL) THEN
-    SELECT itemsrcPrice(pItemSourceId, COALESCE(_s.cohead_warehous_id, -1), pDropShip,
-                        COALESCE(pQty, _s.orderqty), COALESCE(_i.vend_curr_id, baseCurrId()), CURRENT_DATE) INTO _price;
+    SELECT itemsrcPrice(pItemSourceId,
+                        COALESCE(_s.cohead_warehous_id, -1),
+                        pDropShip,
+                        (COALESCE(pQty, _s.orderqty) / COALESCE(_i.itemsrc_invvendoruomratio, 1.00)),
+                        COALESCE(_i.vend_curr_id, baseCurrId()),
+                        CURRENT_DATE) INTO _price;
   ELSE
     _price := pPrice;
   END IF;
