@@ -28,19 +28,15 @@ BEGIN
     END IF;
 
     --  Make sure that the parent is not used in the component at some level
-    IF ( SELECT (item_type IN ('M', 'F'))
-         FROM item
-         WHERE (item_id=NEW.bomitem_item_id) ) THEN
-      SELECT indentedWhereUsed(NEW.bomitem_parent_item_id) INTO _bomworksetid;
-      SELECT bomwork_id INTO _bomworkid
-      FROM bomwork
-      WHERE ((bomwork_set_id=_bomworksetid)
-        AND  (bomwork_item_id=NEW.bomitem_item_id))
-      LIMIT 1;
-      IF (FOUND) THEN
-        PERFORM deleteBOMWorkset(_bomworksetid);
-        RAISE EXCEPTION 'BOM Item Parent is used by Component, BOM is recursive. [xtuple: createBOMItem, -2]';
-      END IF;
+    SELECT indentedWhereUsed(NEW.bomitem_parent_item_id) INTO _bomworksetid;
+    SELECT bomwork_id INTO _bomworkid
+    FROM bomwork
+    WHERE ((bomwork_set_id=_bomworksetid)
+      AND  (bomwork_item_id=NEW.bomitem_item_id))
+    LIMIT 1;
+    IF (FOUND) THEN
+      PERFORM deleteBOMWorkset(_bomworksetid);
+      RAISE EXCEPTION 'BOM Item Parent is used by Component, BOM is recursive. [xtuple: createBOMItem, -2]';
     END IF;
 
     PERFORM deleteBOMWorkset(_bomworksetid);
