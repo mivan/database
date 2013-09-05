@@ -410,7 +410,7 @@ SELECT pr_id AS orderid, -1 AS altorderid,
        pr_qtyreq AS qtyordered,
        NULL AS qtyreceived,
        pr_qtyreq AS balance,
-       planreq_note AS notes
+       pr_releasenote AS notes
 FROM pr, itemsite, item
 WHERE ((pr_itemsite_id=itemsite_id)
   AND  (itemsite_item_id=item_id)
