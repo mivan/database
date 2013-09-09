@@ -271,7 +271,9 @@ BEGIN
 
       --We do not need to distribute lot/serial info for transit, post trans and discard dist detail
       PERFORM postIntoTrialBalance(itemlocpost_glseq) FROM itemlocpost WHERE (itemlocpost_itemlocseries=_itemlocSeries);
-      PERFORM postInvHist(_invhistid);
+      IF (_invhistid > 0) THEN
+        PERFORM postInvHist(_invhistid);
+      END IF;
       DELETE FROM itemlocdist WHERE (itemlocdist_series=_itemlocSeries);
       DELETE FROM itemlocpost WHERE (itemlocpost_itemlocSeries=_itemlocSeries);
 
@@ -295,7 +297,9 @@ BEGIN
         AND  (ti.itemsite_warehous_id=_to.tohead_trns_warehous_id));
       --We do not need to distribute lot/serial info for transit, post trans and discard dist detail
       PERFORM postIntoTrialBalance(itemlocpost_glseq) FROM itemlocpost WHERE (itemlocpost_itemlocseries=_itemlocSeries);
-      PERFORM postInvHist(_invhistid);
+      IF (_invhistid > 0) THEN
+        PERFORM postInvHist(_invhistid);
+      END IF;
       DELETE FROM itemlocdist WHERE (itemlocdist_series=_itemlocSeries);
       DELETE FROM itemlocpost WHERE (itemlocpost_itemlocSeries=_itemlocSeries);
 
