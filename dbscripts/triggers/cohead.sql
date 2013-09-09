@@ -417,7 +417,8 @@ BEGIN
 
     ELSIF (TG_OP = 'UPDATE') THEN
 
-      IF (OLD.cohead_terms_id <> NEW.cohead_terms_id) THEN
+      IF ( (OLD.cohead_terms_id <> NEW.cohead_terms_id) AND
+           (OLD.cohead_cust_id = NEW.cohead_cust_id) ) THEN
         PERFORM postComment( 'ChangeLog', 'S', NEW.cohead_id,
                              ('Terms Changed from "' || oldterms.terms_code || '" to "' || newterms.terms_code || '"') )
         FROM terms AS oldterms, terms AS newterms
@@ -425,7 +426,8 @@ BEGIN
          AND (newterms.terms_id=NEW.cohead_terms_id) );
       END IF;
 
-      IF (OLD.cohead_shipvia <> NEW.cohead_shipvia) THEN
+      IF ( (OLD.cohead_shipvia <> NEW.cohead_shipvia) AND
+           (OLD.cohead_cust_id = NEW.cohead_cust_id) ) THEN
         PERFORM postComment ('ChangeLog', 'S', New.cohead_id, ('Shipvia Changed from "' || OLD.cohead_shipvia || '" to "' || NEW.cohead_shipvia || '"'));
       END IF;
 
