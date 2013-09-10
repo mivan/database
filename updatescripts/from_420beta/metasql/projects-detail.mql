@@ -5,7 +5,7 @@
 --        See www.xtuple.com/CPAL for the full text of the software license.
 --        
 --        xTuple version 4.2.0 - Modified to significantly amend the display of this screen and its filters.
---
+--        
 SELECT *, 
   formatQty(qty) AS f_qty,
   formatMoney(value) AS f_value,
@@ -1304,17 +1304,17 @@ WHERE (true)
      OR  (prj_descrip ~* <? value("search_pattern") ?>) ))
 <? endif ?>
 <? if exists("username") ?>
-  AND prj_username=<? value("username") ?> OR prj_owner_username=<? value("username") ?>)
+  AND (prj_username=<? value("username") ?> OR prj_owner_username=<? value("username") ?>)
 <? endif ?>
 <? if exists("assigned_username") ?> 
-  AND prj_username=<? value("assigned_username") ?>) 
+  AND (prj_username=<? value("assigned_username") ?>) 
 <? elseif exists("assigned_usr_pattern") ?>
-  AND prj_username ~ <? value("assigned_usr_pattern") ?>) 
+  AND (prj_username ~ <? value("assigned_usr_pattern") ?>) 
 <? endif ?>
 <? if exists("owner_username") ?> 
-  AND prj_owner_username=<? value("owner_username") ?>)
+  AND (prj_owner_username=<? value("owner_username") ?>)
 <? elseif exists("owner_usr_pattern") ?>
-  AND prj_owner_username ~ <? value("owner_usr_pattern") ?>) 
+  AND (prj_owner_username ~ <? value("owner_usr_pattern") ?>) 
 <? endif ?>
 <? if exists("crmacct_id") ?>
   AND project IN (SELECT prj_id FROM prj WHERE (prj_crmacct_id=<? value("crmacct_id") ?>))
