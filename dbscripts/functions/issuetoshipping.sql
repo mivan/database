@@ -236,6 +236,10 @@ BEGIN
       AND  (itemsite_costcat_id=costcat_id)
       AND  (toitem_id=pitemid) );
 
+    SELECT (invhist_unitcost * invhist_invqty) INTO _value
+    FROM invhist
+    WHERE (invhist_id=_invhistid);
+
     SELECT shiphead_id INTO _shipheadid
     FROM shiphead, toitem
     WHERE ((shiphead_order_id=toitem_tohead_id)
@@ -273,16 +277,16 @@ BEGIN
 
     INSERT INTO shipitem
     ( shipitem_shiphead_id, shipitem_orderitem_id, shipitem_qty,
-      shipitem_transdate, shipitem_trans_username, shipitem_value,
-      shipitem_invhist_id )
-    SELECT
-      _shipheadid, pitemid, pQty,
-      _timestamp, getEffectiveXtUser(), invhist_invqty * invhist_unitcost,
-      _invhistid
-    FROM toitem, item, invhist
-    WHERE ((toitem_id=pitemid)
-    AND (item_id=toitem_item_id)
-    AND (invhist_id=_invhistid));
+      shipitem_transdate, shipitem_trans_username, shipitem_invoiced,
+      shipitem_value, shipitem_invhist_id )
+    VALUES
+    ( _shipheadid, pitemid, pQty,
+      _timestamp, getEffectiveXtUser(), FALSE,
+      _value, 
+      CASE WHEN _invhistid = -1 THEN NULL
+           ELSE _invhistid
+      END
+    );
 
   ELSE
     RETURN -11;
