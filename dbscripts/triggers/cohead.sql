@@ -456,25 +456,15 @@ BEGIN
   IF (TG_OP = 'UPDATE') THEN
     IF ( (NOT (OLD.cohead_holdtype = 'N')) AND
          (NEW.cohead_holdtype='N') ) THEN
-      INSERT INTO evntlog ( evntlog_evnttime, evntlog_username, evntlog_evnttype_id,
-                            evntlog_ordtype, evntlog_ord_id, evntlog_warehous_id, evntlog_number )
-      SELECT CURRENT_TIMESTAMP, evntnot_username, evnttype_id,
-             'S', NEW.cohead_id, NEW.cohead_warehous_id, NEW.cohead_number::TEXT
-      FROM evntnot, evnttype
-      WHERE ( (evntnot_evnttype_id=evnttype_id)
-       AND (evntnot_warehous_id=NEW.cohead_warehous_id)
-       AND (evnttype_name='SoReleased') );
+      PERFORM postEvent('SoReleased', 'S', NEW.cohead_id,
+                        NEW.cohead_warehous_id, NEW.cohead_number,
+                        NULL, NULL, NULL, NULL);
     END IF;
 
     IF (OLD.cohead_ordercomments <> NEW.cohead_ordercomments) THEN
-      INSERT INTO evntlog ( evntlog_evnttime, evntlog_username, evntlog_evnttype_id,
-                            evntlog_ordtype, evntlog_ord_id, evntlog_warehous_id, evntlog_number )
-      SELECT CURRENT_TIMESTAMP, evntnot_username, evnttype_id,
-             'S', NEW.cohead_id, NEW.cohead_warehous_id, NEW.cohead_number::TEXT
-      FROM evntnot, evnttype
-      WHERE ( (evntnot_evnttype_id=evnttype_id)
-       AND (evntnot_warehous_id=NEW.cohead_warehous_id)
-       AND (evnttype_name='SoNotesChanged') );
+      PERFORM postEvent('SoNotesChanged', 'S', NEW.cohead_id,
+                        NEW.cohead_warehous_id, NEW.cohead_number,
+                        NULL, NULL, NULL, NULL);
     END IF;
 
     IF ((OLD.cohead_shipchrg_id != NEW.cohead_shipchrg_id)

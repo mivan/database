@@ -148,22 +148,15 @@ BEGIN
     NEW.poitem_qty_returned		:= 0;
     NEW.poitem_qty_vouchered		:= 0;
       
---   Insert Event Start
-       
-    INSERT INTO evntlog ( evntlog_evnttime, evntlog_username, evntlog_evnttype_id,
-                          evntlog_ordtype, evntlog_ord_id, evntlog_warehous_id, evntlog_number )
-    SELECT CURRENT_TIMESTAMP, evntnot_username, evnttype_id,
-                     'P', NEW.poitem_id, itemsite_warehous_id, (pohead_number || '-' || NEW.poitem_linenumber || ': ' || item_number)
-    FROM evntnot, evnttype, itemsite, item, pohead
-     WHERE ( (evntnot_evnttype_id=evnttype_id)
-     AND (evntnot_warehous_id=itemsite_warehous_id)
-     AND (itemsite_id=NEW.poitem_itemsite_id)
-     AND (itemsite_item_id=item_id)
-     AND (NEW.poitem_pohead_id=pohead_id)
-     AND (NEW.poitem_duedate <= (CURRENT_DATE + itemsite_eventfence))
-     AND (evnttype_name='POitemCreate') );
-
---   Insert Event End
+    PERFORM postEvent('POitemCreate', 'P', NEW.poitem_id,
+                      itemsite_warehous_id,
+                      (pohead_number || '-' || NEW.poitem_linenumber || ': ' || item_number),
+                      NULL, NULL, NULL, NULL)
+    FROM pohead, itemsite, item
+    WHERE (pohead_id=NEW.poitem_pohead_id)
+      AND (itemsite_id=NEW.poitem_itemsite_id)
+      AND (item_id=itemsite_item_id)
+      AND (NEW.poitem_duedate <= (CURRENT_DATE + itemsite_eventfence));
 
   END IF;
 

@@ -65,18 +65,13 @@ BEGIN
   END IF;
 
   IF (TG_OP = 'INSERT') THEN
-    INSERT INTO evntlog ( evntlog_evnttime, evntlog_username, evntlog_evnttype_id,
-                          evntlog_ordtype, evntlog_ord_id, evntlog_warehous_id, evntlog_number )
-    SELECT CURRENT_TIMESTAMP, evntnot_username, evnttype_id,
-           'S', NEW.coitem_id, itemsite_warehous_id, (cohead_number || '-' || NEW.coitem_linenumber)
-    FROM evntnot, evnttype, itemsite, item, cohead
-    WHERE ( (evntnot_evnttype_id=evnttype_id)
-     AND (evntnot_warehous_id=itemsite_warehous_id)
-     AND (itemsite_id=NEW.coitem_itemsite_id)
-     AND (itemsite_item_id=item_id)
-     AND (NEW.coitem_cohead_id=cohead_id)
-     AND (NEW.coitem_scheddate <= (CURRENT_DATE + itemsite_eventfence))
-     AND (evnttype_name='SoitemCreated') );
+    PERFORM postEvent('SoitemCreated', 'S', NEW.coitem_id,
+                      itemsite_warehous_id, (cohead_number || '-' || NEW.coitem_linenumber),
+                      NULL, NULL, NULL, NULL)
+    FROM cohead, itemsite
+    WHERE ( (cohead_id=NEW.coitem_cohead_id)
+      AND   (itemsite_id=NEW.coitem_itemsite_id)
+      AND   (NEW.coitem_scheddate <= (CURRENT_DATE + itemsite_eventfence)) );
 
     IF (_changelog) THEN
       PERFORM postComment('ChangeLog', 'SI', NEW.coitem_id, 'Created');
@@ -111,21 +106,14 @@ BEGIN
           RAISE EXCEPTION 'You can not change the qty ordered for a Kit item when one or more of its components have shipped inventory.';
         END IF;
       END IF;
-      INSERT INTO evntlog ( evntlog_evnttime, evntlog_username, evntlog_evnttype_id,
-			    evntlog_ordtype, evntlog_ord_id, evntlog_warehous_id, evntlog_number,
-			    evntlog_oldvalue, evntlog_newvalue )
-      SELECT CURRENT_TIMESTAMP, evntnot_username, evnttype_id,
-	     'S', NEW.coitem_id, itemsite_warehous_id, (cohead_number || '-' || NEW.coitem_linenumber),
-	     OLD.coitem_qtyord, NEW.coitem_qtyord
-      FROM evntnot, evnttype, itemsite, item, cohead
-      WHERE ( (evntnot_evnttype_id=evnttype_id)
-       AND (evntnot_warehous_id=itemsite_warehous_id)
-       AND (itemsite_id=NEW.coitem_itemsite_id)
-       AND (itemsite_item_id=item_id)
-       AND (NEW.coitem_cohead_id=cohead_id)
-       AND ( (NEW.coitem_scheddate <= (CURRENT_DATE + itemsite_eventfence))
-	OR   (OLD.coitem_scheddate <= (CURRENT_DATE + itemsite_eventfence)) )
-       AND (evnttype_name='SoitemQtyChanged') );
+      PERFORM postEvent('SoitemQtyChanged', 'S', NEW.coitem_id,
+                        itemsite_warehous_id, (cohead_number || '-' || NEW.coitem_linenumber),
+                        NEW.coitem_qtyord, OLD.coitem_qtyord, NULL, NULL)
+      FROM cohead, itemsite
+      WHERE ( (cohead_id=NEW.coitem_cohead_id)
+        AND   (itemsite_id=NEW.coitem_itemsite_id)
+        AND   ( (NEW.coitem_scheddate <= (CURRENT_DATE + itemsite_eventfence))
+         OR     (OLD.coitem_scheddate <= (CURRENT_DATE + itemsite_eventfence)) ) );
 
       IF (_changelog) THEN
 	PERFORM postComment( 'ChangeLog', 'SI', NEW.coitem_id,
@@ -145,21 +133,14 @@ BEGIN
     END IF;
 
     IF (NEW.coitem_scheddate <> OLD.coitem_scheddate) THEN
-      INSERT INTO evntlog ( evntlog_evnttime, evntlog_username, evntlog_evnttype_id,
-			    evntlog_ordtype, evntlog_ord_id, evntlog_warehous_id, evntlog_number,
-			    evntlog_olddate, evntlog_newdate )
-      SELECT CURRENT_TIMESTAMP, evntnot_username, evnttype_id,
-	     'S', NEW.coitem_id, itemsite_warehous_id, (cohead_number || '-' || NEW.coitem_linenumber),
-	     OLD.coitem_scheddate, NEW.coitem_scheddate
-      FROM evntnot, evnttype, itemsite, item, cohead
-      WHERE ( (evntnot_evnttype_id=evnttype_id)
-       AND (evntnot_warehous_id=itemsite_warehous_id)
-       AND (itemsite_id=NEW.coitem_itemsite_id)
-       AND (itemsite_item_id=item_id)
-       AND (NEW.coitem_cohead_id=cohead_id)
-       AND ( (NEW.coitem_scheddate <= (CURRENT_DATE + itemsite_eventfence))
-	OR   (OLD.coitem_scheddate <= (CURRENT_DATE + itemsite_eventfence)) )
-       AND (evnttype_name='SoitemSchedDateChanged') );
+      PERFORM postEvent('SoitemSchedDateChanged', 'S', NEW.coitem_id,
+                        itemsite_warehous_id, (cohead_number || '-' || NEW.coitem_linenumber),
+                        NULL, NULL, NEW.coitem_scheddate, OLD.coitem_scheddate)
+      FROM cohead, itemsite
+      WHERE ( (cohead_id=NEW.coitem_cohead_id)
+        AND   (itemsite_id=NEW.coitem_itemsite_id)
+        AND   ( (NEW.coitem_scheddate <= (CURRENT_DATE + itemsite_eventfence))
+         OR     (OLD.coitem_scheddate <= (CURRENT_DATE + itemsite_eventfence)) ) );
 
       IF (_changelog) THEN
 	PERFORM postComment( 'ChangeLog', 'SI', NEW.coitem_id,
@@ -207,21 +188,13 @@ BEGIN
 	PERFORM postComment('ChangeLog', 'S', NEW.coitem_cohead_id, 'Line # '|| NEW.coitem_linenumber ||' Canceled');
       END IF;
 
-      INSERT INTO evntlog ( evntlog_evnttime, evntlog_username,
-			    evntlog_evnttype_id, evntlog_ordtype,
-			    evntlog_ord_id, evntlog_warehous_id, evntlog_number )
-      SELECT CURRENT_TIMESTAMP, evntnot_username,
-	     evnttype_id, 'S',
-	     OLD.coitem_id, itemsite_warehous_id,
-	     (cohead_number || '-' || OLD.coitem_linenumber)
-      FROM evntnot, evnttype, itemsite, item, cohead
-      WHERE ( (evntnot_evnttype_id=evnttype_id)
-       AND (evntnot_warehous_id=itemsite_warehous_id)
-       AND (itemsite_id=OLD.coitem_itemsite_id)
-       AND (itemsite_item_id=item_id)
-       AND (OLD.coitem_cohead_id=cohead_id)
-       AND (OLD.coitem_scheddate <= (CURRENT_DATE + itemsite_eventfence))
-       AND (evnttype_name='SoitemCancelled') );
+      PERFORM postEvent('SoitemCancelled', 'S', OLD.coitem_id,
+                        itemsite_warehous_id, (cohead_number || '-' || OLD.coitem_linenumber),
+                        NULL, NULL, NULL, NULL)
+      FROM cohead, itemsite
+      WHERE ( (cohead_id=OLD.coitem_cohead_id)
+        AND   (itemsite_id=OLD.coitem_itemsite_id)
+        AND   (OLD.coitem_scheddate <= (CURRENT_DATE + itemsite_eventfence)) );
 
     END IF;
 
@@ -585,22 +558,15 @@ BEGIN
     IF (NEW.coitem_order_type = 'P') THEN
       --If soitem is cancelled
       IF ((NEW.coitem_status = 'X') AND (OLD.coitem_status <> 'X')) THEN
-        --Generate the PoItemSoCancelled event
-        INSERT INTO evntlog
-                    ( evntlog_evnttime, evntlog_username, evntlog_evnttype_id,
-                      evntlog_ordtype, evntlog_ord_id, evntlog_warehous_id,
-                      evntlog_number )
-        SELECT CURRENT_TIMESTAMP, evntnot_username, evnttype_id,
-        'P', poitem_id, itemsite_warehous_id,
-        (pohead_number || '-' || poitem_linenumber || ': ' || item_number)
-        FROM evntnot JOIN evnttype ON (evntnot_evnttype_id=evnttype_id)
-             JOIN itemsite ON (evntnot_warehous_id=itemsite_warehous_id)
-             JOIN item ON (itemsite_item_id=item_id)
-             JOIN poitem ON (poitem_itemsite_id=itemsite_id)
-             JOIN pohead ON( poitem_pohead_id=pohead_id)
-        WHERE( (poitem_id=OLD.coitem_order_id)
-        AND (poitem_duedate <= (CURRENT_DATE + itemsite_eventfence))
-        AND (evnttype_name='PoItemSoCancelled') );
+        PERFORM postEvent('PoItemSoCancelled', 'P', poitem_id,
+                          itemsite_warehous_id,
+                          (pohead_number || '-' || poitem_linenumber || ':' || item_number),
+                          NULL, NULL, NULL, NULL)
+        FROM poitem JOIN itemsite ON (itemsite_id=poitem_itemsite_id)
+                    JOIN item ON (item_id=itemsite_item_id)
+                    JOIN pohead ON (pohead_id=poitem_pohead_id)
+        WHERE ( (poitem_id=OLD.coitem_order_id)
+          AND   (poitem_duedate <= (CURRENT_DATE + itemsite_eventfence)) );
       END IF;
     END IF;
   END IF;
@@ -769,18 +735,11 @@ BEGIN
     END LOOP;
   END IF;
 
-  INSERT INTO evntlog ( evntlog_evnttime, evntlog_username,
-                        evntlog_evnttype_id, evntlog_ordtype,
-                        evntlog_ord_id, evntlog_warehous_id, evntlog_number )
-  SELECT CURRENT_TIMESTAMP, evntnot_username,
-	   evnttype_id, 'S',
-	   OLD.coitem_id, _r.itemsite_warehous_id,
-	   (_r.cohead_number || '-' || OLD.coitem_linenumber)
-    FROM evntnot, evnttype
-   WHERE ( (evntnot_evnttype_id=evnttype_id)
-     AND   (evntnot_warehous_id=_r.itemsite_warehous_id)
-     AND   (OLD.coitem_scheddate <= (CURRENT_DATE + _r.itemsite_eventfence))
-     AND   (evnttype_name='SoitemCancelled') );
+  IF (OLD.coitem_scheddate <= (CURRENT_DATE + _r.itemsite_eventfence)) THEN
+    PERFORM postEvent('SoitemCancelled', 'S', OLD.coitem_id,
+                      _r.itemsite_warehous_id, (_r.cohead_number || '-' || OLD.coitem_linenumber),
+                      NULL, NULL, NULL, NULL);
+  END IF;
 
   RETURN OLD;
 END;
