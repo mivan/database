@@ -14,5 +14,3 @@ ALTER TABLE prjtype
   OWNER TO admin;
 GRANT ALL ON TABLE prjtype TO admin;
 GRANT ALL ON TABLE prjtype TO xtrole;
-
-INSERT INTO prjtype VALUES (1,'Standard','Standard Projects',true);
