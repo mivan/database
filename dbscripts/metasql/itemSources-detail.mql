@@ -28,6 +28,9 @@ WHERE ((true)
 <? if not exists("showInactive") ?>
    AND (itemsrc_active)
 <? endif ?>
+<? if exists("defaultOnly") ?>
+  AND (itemsrc_default)
+<? endif ?>
 <? if exists("item_id") ?>
   AND (itemsrc_item_id=<? value("item_id") ?>)
 <? endif ?>
