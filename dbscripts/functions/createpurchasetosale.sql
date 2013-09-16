@@ -83,7 +83,7 @@ BEGIN
 
   SELECT * INTO _w
   FROM whsinfo JOIN addr ON (warehous_addr_id = addr_id)
-    JOIN cntct ON (warehous_cntct_id = cntct_id)
+   LEFT OUTER JOIN cntct ON (warehous_cntct_id = cntct_id)
     JOIN itemsite ON (warehous_id = itemsite_warehous_id)
   WHERE (itemsite_id = _s.itemsite_id);
 
