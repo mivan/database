@@ -19,9 +19,9 @@ SELECT ipsitem_id AS id, 1 AS altid,
                    ipsitem_price
                   WHEN (ipsitem_type='D') THEN
                    (item_listprice - (item_listprice * COALESCE(ipsitem_discntprcnt, 0.0)) - COALESCE(ipsitem_fixedamtdiscount, 0.0))
-                  WHEN ((ipsitem_type = 'M') AND (ipsitem_discntprcnt <= 0.5) AND fetchMetricBool('Long30Markups') AND fetchMetricBool('WholesalePriceCosting')) THEN
+                  WHEN ((ipsitem_type = 'M') AND fetchMetricBool('Long30Markups') AND fetchMetricBool('WholesalePriceCosting')) THEN
                    (item_listcost / (1.0 - ipsitem_discntprcnt) + ipsitem_fixedamtdiscount)
-                  WHEN ((ipsitem_type = 'M') AND (ipsitem_discntprcnt <= 0.5) AND fetchMetricBool('Long30Markups')) THEN
+                  WHEN ((ipsitem_type = 'M') AND fetchMetricBool('Long30Markups')) THEN
                    (itemCost(itemsite_id) / (1.0 - ipsitem_discntprcnt) + ipsitem_fixedamtdiscount)
                   WHEN (ipsitem_type = 'M' AND fetchMetricBool('WholesalePriceCosting')) THEN
                    (item_listcost + (item_listcost * ipsitem_discntprcnt) + ipsitem_fixedamtdiscount)
