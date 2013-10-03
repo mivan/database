@@ -39,7 +39,8 @@ SELECT -1 AS orderid, -1 AS altorderid, 'QOH' AS ordertype,
        0 AS amount,
        0 AS qtyordered,
        0 AS qtyreceived,
-       <? value("qoh") ?> AS balance
+       <? value("qoh") ?> AS balance,
+       '' AS notes
 UNION
 <? endif ?>
 <? if exists("MultiWhs") ?>
