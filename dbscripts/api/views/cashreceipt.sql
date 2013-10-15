@@ -2,6 +2,7 @@ SELECT dropIfExists('VIEW', 'cashreceipt', 'api');
 CREATE OR REPLACE VIEW api.cashreceipt AS
   SELECT
     cust_number::VARCHAR AS customer_number,
+    cashrcpt_number AS cashreceipt_number,
     CASE
       WHEN cashrcpt_fundstype='C' THEN
         'Check'::VARCHAR
@@ -60,6 +61,7 @@ CREATE OR REPLACE RULE "_INSERT" AS
 
   INSERT INTO cashrcpt (
     cashrcpt_cust_id,
+    cashrcpt_number,
     cashrcpt_amount,
     cashrcpt_fundstype,
     cashrcpt_docnumber,
@@ -72,6 +74,7 @@ CREATE OR REPLACE RULE "_INSERT" AS
     )
   VALUES (
     getCustId(NEW.customer_number),
+    (SELECT fetchCashRcptNumber() ),
     COALESCE(NEW.amount_received, 0),
     CASE
       WHEN NEW.funds_type='Check' THEN
@@ -119,6 +122,7 @@ CREATE OR REPLACE RULE "_UPDATE" AS
 
   UPDATE cashrcpt SET
     cashrcpt_amount=NEW.amount_received,
+    cashrcpt_number=NEW.cashreceipt_number,
     cashrcpt_fundstype=
       CASE
         WHEN NEW.funds_type='Check' THEN
