@@ -24,7 +24,7 @@ DECLARE
   pTimestamp            ALIAS FOR $3;
   _itemlocSeries        INTEGER;
   _invhistid            INTEGER;
-  _itemlocrsrvid        INTEGER;
+  _reserveid            INTEGER;
   _coheadid             INTEGER;
   _rows                 INTEGER;
   _r                    RECORD;
@@ -168,10 +168,11 @@ BEGIN
           WHERE (shipitemlocrsrv_shipitem_id=_r.shipitem_id)
         LOOP
           -- See if a reservation record still exists
-          SELECT itemlocrsrv_id, itemlocrsrv_qty INTO _itemlocrsrvid
-          FROM itemlocrsrv JOIN itemloc ON (itemlocrsrv_itemloc_id=itemloc_id)
-          WHERE ((itemlocrsrv_source = 'SO')
-            AND  (itemlocrsrv_source_id = _r.shipitem_orderitem_id )
+          SELECT reserve_id INTO _reserveid
+          FROM reserve JOIN itemloc ON (reserve_supply_id=itemloc_id)
+          WHERE ((reserve_supply_type='I')
+            AND  (reserve_demand_type = 'SO')
+            AND  (reserve_demand_id = _r.shipitem_orderitem_id )
             AND  (itemloc_itemsite_id=_rsrv.shipitemlocrsrv_itemsite_id)
             AND  (itemloc_location_id=_rsrv.shipitemlocrsrv_location_id)
             AND  (COALESCE(itemloc_ls_id, -1)=COALESCE(_rsrv.shipitemlocrsrv_ls_id, -1))
@@ -181,14 +182,14 @@ BEGIN
           GET DIAGNOSTICS _rows = ROW_COUNT;
           IF (_rows > 0 ) THEN  
             -- Update existing
-            UPDATE itemlocrsrv
-            SET itemlocrsrv_qty = (itemlocrsrv_qty + _rsrv.shipitemlocrsrv_qty)
-            WHERE (itemlocrsrv_id=_itemlocrsvrid);
+            UPDATE reserve
+            SET reserve_qty = (reserve_qty + _rsrv.shipitemlocrsrv_qty)
+            WHERE (reserve_id=_reserveid);
           ELSE
             -- Recreate record
-            INSERT INTO itemlocrsrv
-            SELECT nextval('itemlocrsrv_itemlocrsrv_id_seq'), 'SO', _r.shipitem_orderitem_id,
-                   itemloc_id, _rsrv.shipitemlocrsrv_qty
+            INSERT INTO reserve
+            SELECT nextval('reserve_reserve_id_seq'), 'SO', _r.shipitem_orderitem_id,
+                   'I', itemloc_id, _rsrv.shipitemlocrsrv_qty, 'R'
             FROM itemloc
             WHERE ((itemloc_itemsite_id=_rsrv.shipitemlocrsrv_itemsite_id)
               AND  (itemloc_location_id=_rsrv.shipitemlocrsrv_location_id)
