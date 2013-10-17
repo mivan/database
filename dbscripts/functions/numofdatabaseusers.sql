@@ -7,6 +7,17 @@ DECLARE
 
 BEGIN
 
+  -- in version 9.2.0 the column "procpid" was changed to just "pid"
+  IF (select split_part(version(), ' ', 2) >= '9.2.0')
+  THEN
+  SELECT count(*)
+    INTO _count
+    FROM pg_stat_activity, pg_locks
+   WHERE((database=datid)
+     AND (classid=datid)
+     AND (objsubid=2)
+     AND (pid = pg_backend_pid()));
+  ELSE
   SELECT count(*)
     INTO _count
     FROM pg_stat_activity, pg_locks
@@ -14,6 +25,8 @@ BEGIN
      AND (classid=datid)
      AND (objsubid=2)
      AND (procpid = pg_backend_pid()));
+  END IF;
+
   IF (_count IS NULL) THEN
     _count := 0;
   END IF;
