@@ -21,9 +21,17 @@ DECLARE
 
 BEGIN
 
-  PERFORM pg_try_advisory_lock(datid::integer, procpid)
+  -- in version 9.2.0 the column "procpid" was changed to just "pid"
+  IF (select split_part(version(), ' ', 2) >= '9.2.0')
+  THEN
+    PERFORM pg_try_advisory_lock(datid::integer, pid)
+     FROM pg_stat_activity
+    WHERE(pid = pg_backend_pid());
+  ELSE
+    PERFORM pg_try_advisory_lock(datid::integer, procpid)
      FROM pg_stat_activity
     WHERE(procpid = pg_backend_pid());
+  END IF;
 
   -- This is new to version 9.0 and higher and will error on older versions
   IF (select CAST(split_part(split_part(version(), ' ', 2),'.',1) AS integer) >= 9) THEN
