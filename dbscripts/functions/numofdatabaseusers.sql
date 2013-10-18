@@ -1,4 +1,3 @@
-
 CREATE OR REPLACE FUNCTION numOfDatabaseUsers() RETURNS INTEGER AS $$
 -- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
@@ -16,7 +15,7 @@ BEGIN
    WHERE((database=datid)
      AND (classid=datid)
      AND (objsubid=2)
-     AND (pid = pg_backend_pid()));
+     AND (pg_stat_activity.pid = pg_backend_pid()));
   ELSE
   SELECT count(*)
     INTO _count
@@ -35,4 +34,3 @@ BEGIN
 
 END;
 $$ LANGUAGE 'plpgsql';
-
