@@ -120,7 +120,7 @@ BEGIN
           SELECT nextval('shipitemlocrsrv_shipitemlocrsrv_id_seq'),
             shipitem_id, itemloc_itemsite_id, itemloc_location_id,
             itemloc_ls_id, itemloc_expiration, itemloc_warrpurc,
-            least(_itemlocdist.qty, reserve_qty)
+            least((_itemlocdist.qty * -1.0), reserve_qty)
           FROM shipitem, itemloc
             JOIN reserve ON (itemloc_id=reserve_supply_id AND reserve_supply_type='I')
           WHERE ( (shipitem_invhist_id=_itemlocdist.invhistid)
