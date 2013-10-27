@@ -7,7 +7,7 @@ DECLARE
 BEGIN
 
   -- in version 9.2.0 the column "procpid" was changed to just "pid"
-  IF (select split_part(version(), ' ', 2) >= '9.2.0')
+  IF (compareversion('9.2.0') <= 0)
   THEN
   SELECT count(*)
     INTO _count
