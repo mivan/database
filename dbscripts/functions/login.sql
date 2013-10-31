@@ -22,7 +22,7 @@ DECLARE
   _p RECORD;
 
 BEGIN
-
+  -- added support for PostgreSQL 9.2.0, Incident 21852
   IF (compareversion('9.2.0') <= 0)
   THEN
     PERFORM pg_try_advisory_lock(datid::integer, pid)

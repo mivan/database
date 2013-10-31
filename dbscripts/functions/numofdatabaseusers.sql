@@ -6,7 +6,7 @@ DECLARE
 
 BEGIN
 
-  -- in version 9.2.0 the column "procpid" was changed to just "pid"
+  -- in version 9.2.0 the column "procpid" was changed to just "pid" Incident #21852
   IF (compareversion('9.2.0') <= 0)
   THEN
   SELECT count(*)
