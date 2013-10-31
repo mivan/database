@@ -68,6 +68,14 @@ BEGIN
 	WHERE taxhist_parent_id = pCobmiscid 
 	AND taxhist_taxtype_id = getadjustmenttaxtypeid();
 
+--  Create the Invoice Characteristic Assignments
+    INSERT INTO charass
+          (charass_target_type, charass_target_id, charass_char_id, charass_value, charass_default, charass_price)
+    SELECT 'INV', _invcheadid, charass_char_id, charass_value, charass_default, charass_price
+      FROM cobmisc JOIN cohead ON (cohead_id=cobmisc_cohead_id)
+                   JOIN charass ON ((charass_target_type='SO') AND (charass_target_id=cohead_id))
+    WHERE (cobmisc_id=pCobmiscid);
+
 --  Create the Invoice items
   FOR _r IN SELECT coitem_id, coitem_linenumber, coitem_subnumber, coitem_custpn,
                    coitem_qtyord, cobill_qty,
