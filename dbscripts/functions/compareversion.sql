@@ -1,5 +1,7 @@
 
 CREATE OR REPLACE FUNCTION compareversion(text, text DEFAULT split_part(version(), ' ', 2)) 
+-- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
+-- See www.xtuple.com/CPAL for the full text of the software license.
 -- Returns 1 if the left version is greater than the right version
 -- -1 if the right is greater than the left
 --  0 if the versions are equal.
