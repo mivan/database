@@ -18,7 +18,9 @@ SELECT DISTINCT
 <? foreach("char_id_date_list") ?>
        charass_alias<? literal("char_id_date_list") ?>.charass_value::date AS char<? literal("char_id_date_list") ?>,
 <? endforeach ?>
-       firstline(cohead_ordercomments) AS notes
+       firstline(cohead_ordercomments) AS notes,
+       calcSalesOrderAmt(cohead_id) AS ordertotal,
+       'extprice' AS ordertotal_xtnumericrole
 FROM cohead 
      JOIN custinfo ON (cohead_cust_id=cust_id) 
      JOIN custtype ON (cust_custtype_id=custtype_id)
