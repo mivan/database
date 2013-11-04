@@ -130,7 +130,89 @@ SELECT prjtask_id AS id,
   LEFT OUTER JOIN addr ON (cntct_addr_id=addr_id)
 
  WHERE (prjtask_prj_id = <? value("prj_id") ?> )
- GROUP BY custinfo.cust_name, prjtask.prjtask_id, addr.addr_city, addr.addr_state, cntct_name, prjtask_number, prjtask_status, prjtask_name, prjtask_descrip, prjtask_due_date, prjtask_assigned_date, prjtask_start_date, prjtask_completed_date, prjtask_hours_budget, prjtask_hours_actual, prjtask_exp_budget, prjtask_exp_actual
+ GROUP BY custinfo.cust_name, prjtask.prjtask_id, addr.addr_city, addr.addr_state, cntct_name
+
+<? if exists("showIn") ?>
+UNION ALL
+----- INCIDENTS -----
+
+SELECT DISTINCT -1 AS id, 
+       100 AS type,
+       '0' AS subtype,
+       1 AS section,
+       'Incidents' AS section_qtdisplayrole,
+       'Incidents' AS name,
+       NULL::text AS status,
+       NULL::text AS project_type,
+       NULL::text AS item,
+       NULL::text AS descrip,
+       NULL::text AS customer,
+       NULL::text AS contact,
+       NULL::text AS city,
+       NULL::text AS state,
+       NULL::numeric AS qty,
+       NULL::text AS uom,
+       NULL::numeric AS value,
+       NULL::date AS due,
+       NULL::date AS assigned,
+       NULL::date AS started,
+       NULL::date AS completed,
+       NULL::numeric AS hrs_budget,
+       NULL::numeric AS hrs_actual,
+       NULL::numeric AS hrs_balance,
+       NULL::numeric AS exp_budget,
+       NULL::numeric AS exp_actual,
+       NULL::numeric AS exp_balance,
+        
+       NULL::text AS due_qtforegroundrole,
+       1 AS xtindentrole
+    FROM incdt
+UNION ALL
+
+SELECT incdt_id AS id,
+       105 AS type,
+       '0' AS subtype,
+       1 AS section,
+       NULL AS section_qtdisplayrole,
+       incdt_number::text AS name,
+       CASE                         
+           WHEN incdt_status = 'L' THEN <? value('closed') ?>
+           WHEN incdt_status = 'N' THEN <? value('new') ?>
+           WHEN incdt_status = 'F' THEN <? value('feedback') ?>
+           WHEN incdt_status = 'A' THEN <? value('assigned') ?>	
+           WHEN incdt_status = 'R' THEN <? value('resolved') ?>
+           WHEN incdt_status = 'C' THEN <? value('confirmed') ?>
+       END AS status,
+       NULL::text AS project_type,
+       incdt_number::text AS item,
+       incdt_summary AS descrip,
+       crmacct_number AS customer,
+       crmacct_name AS contact,
+       addr_city AS city,
+       addr_state AS state,
+       NULL::numeric AS qty,
+       NULL::text AS uom,
+       NULL::numeric AS value,
+       NULL::date AS due,
+       NULL::date AS assigned,
+       NULL::date AS started,
+       NULL::date AS completed,
+       NULL::numeric AS hrs_budget,
+       NULL::numeric AS hrs_actual,
+       NULL::numeric AS hrs_balance,
+       NULL::numeric AS exp_budget,
+       NULL::numeric AS exp_actual,
+       NULL::numeric AS exp_balance,
+       NULL::text AS due_qtforegroundrole,
+       2 AS xtindentrole
+  FROM incdt
+  LEFT OUTER JOIN crmacct ON (incdt_crmacct_id=crmacct_id)
+  LEFT OUTER JOIN cntct ON (incdt_cntct_id=cntct_id)
+  LEFT OUTER JOIN addr ON (cntct_addr_id=addr_id)
+
+ WHERE (incdt_prj_id = <? value("prj_id") ?> )
+ GROUP BY incdt_id, incdt_prj_id, incdt_number, crmacct_number, crmacct_name, addr.addr_city, addr.addr_state, cntct_name, incdt_number, incdt_status, incdt_assigned_username, incdt_owner_username, incdt_number, incdt_summary 
+<? endif ?>
    
 <? if exists("showSo") ?>
 UNION ALL
