@@ -1,12 +1,12 @@
-
-CREATE OR REPLACE FUNCTION compareversion(text, text DEFAULT split_part(version(), ' ', 2)) 
+CREATE OR REPLACE FUNCTION public.compareversion(text, text DEFAULT split_part(version(), ' '::text, 2))
 -- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 -- Returns 1 if the left version is greater than the right version
 -- -1 if the right is greater than the left
 --  0 if the versions are equal.
 -- parameter two defaults to current server version
-RETURNS INTEGER AS $BODY$
+  RETURNS integer AS
+$BODY$
 DECLARE
   _leftVersion ALIAS FOR $1;
   _rightVersion ALIAS FOR $2;
@@ -17,6 +17,7 @@ DECLARE
   _rightMinor SMALLINT;
   _rightPatch SMALLINT;
   _returnCode SMALLINT;
+  DEBUG BOOLEAN := false;
 BEGIN
 
 -- left
@@ -25,7 +26,9 @@ SELECT  substring(_leftVersion FROM $$(\d+)\.\d+\.\d+$$)::SMALLINT,
 	substring(_leftVersion FROM $$\d+\.\d+\.(\d+)$$)::SMALLINT 
 	INTO _leftMajor, _leftMinor, _leftPatch;
 
-RAISE NOTICE 'Left Version --> % Major --> % Minor --> % Patch --> % ', _leftVersion, _leftMajor, _leftMinor, _leftPatch;
+IF (DEBUG)
+  THEN RAISE NOTICE 'Left Version --> % Major --> % Minor --> % Patch --> % ', _leftVersion, _leftMajor, _leftMinor, _leftPatch;
+END IF;
 
 -- right
 SELECT  substring(_rightVersion FROM $$(\d+)\.\d+\.\d+$$)::SMALLINT, 
@@ -33,7 +36,9 @@ SELECT  substring(_rightVersion FROM $$(\d+)\.\d+\.\d+$$)::SMALLINT,
 	substring(_rightVersion FROM $$\d+\.\d+\.(\d+)$$)::SMALLINT 
 	INTO _rightMajor, _rightMinor, _rightPatch;
 
-RAISE NOTICE 'Right Version --> % Major --> % Minor --> % Patch --> % ', _rightVersion, _rightMajor, _rightMinor, _rightPatch;
+IF (DEBUG)
+ THEN RAISE NOTICE 'Right Version --> % Major --> % Minor --> % Patch --> % ', _rightVersion, _rightMajor, _rightMinor, _rightPatch;
+END IF;
 
 -- check major version
 IF (_leftMajor > _rightMajor) THEN _returnCode := 1;
@@ -56,4 +61,7 @@ END IF;
 RETURN _returnCode;
 
 END;
-$BODY$ LANGUAGE PLPGSQL STABLE;
+$BODY$
+  LANGUAGE plpgsql STABLE
+ALTER FUNCTION public.compareversion(text, text)
+  OWNER TO admin;
