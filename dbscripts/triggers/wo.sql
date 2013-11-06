@@ -88,6 +88,14 @@ BEGIN
     END IF;
   END IF;
 
+  IF (TG_OP = 'UPDATE') THEN
+    IF (NEW.wo_prj_id <> OLD.wo_prj_id) THEN
+      UPDATE wo SET wo_prj_id=NEW.wo_prj_id
+      WHERE (wo_ordtype='W')
+        AND (wo_ordid=NEW.wo_id);
+    END IF;
+  END IF;
+
   RETURN NEW;
 
 END;
