@@ -356,7 +356,7 @@ BEGIN
       IF ( (_application = 'Standard') AND (_state IN (41, 43, 14, 34, 24, 42, 44)) ) THEN
         -- Check for Reservations
         IF (SELECT COUNT(*) > 0
-            FROM itemloc JOIN itemlocrsrv ON (itemlocrsrv_itemloc_id=itemloc_id)
+            FROM itemloc JOIN reserve ON (reserve_supply_id=itemloc_id AND reserve_supply_type='I')
             WHERE (itemloc_itemsite_id=OLD.itemsite_id)) THEN
           RAISE EXCEPTION 'Sales Order Reservations by Location exist for this Item Site';
         END IF;
