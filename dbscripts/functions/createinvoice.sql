@@ -74,6 +74,7 @@ BEGIN
     SELECT 'INV', _invcheadid, charass_char_id, charass_value, charass_default, charass_price
       FROM cobmisc JOIN cohead ON (cohead_id=cobmisc_cohead_id)
                    JOIN charass ON ((charass_target_type='SO') AND (charass_target_id=cohead_id))
+                   JOIN char ON (char_id=charass_char_id AND char_invoices)
     WHERE (cobmisc_id=pCobmiscid);
 
 --  Create the Invoice items
