@@ -726,6 +726,7 @@
   <createfunction file="functions/releasewo.sql"                      name="releasewo" />
   <createfunction file="functions/releasewonumber.sql"                name="releasewonumber" />
   <createfunction file="functions/relocateinventory.sql"              name="relocateinventory" />
+  <createfunction file="functions/reopenbankreconciliation.sql"       name="reopenbankreconciliation" />
   <createfunction file="functions/reorderdate.sql"                    name="reorderdate" />
   <createfunction file="functions/replaceallvoidedapchecks.sql"       name="replaceallvoidedapchecks" />
   <createfunction file="functions/replaceallvoidedchecks.sql"         name="replaceallvoidedchecks" />
