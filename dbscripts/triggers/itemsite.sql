@@ -30,19 +30,13 @@ BEGIN
       END IF;
 
       IF ( (NEW.itemsite_qtyonhand < 0) AND (OLD.itemsite_qtyonhand >= 0) AND (NEW.itemsite_eventfence > 0) ) THEN
-        INSERT INTO evntlog
-        ( evntlog_evnttime, evntlog_username, evntlog_evnttype_id,
-          evntlog_ordtype, evntlog_ord_id, evntlog_warehous_id,
-          evntlog_number )
-        SELECT CURRENT_TIMESTAMP, evntnot_username, evnttype_id,
-               'I', NEW.itemsite_id, warehous_id,
-               (item_number || '/' || warehous_code)
-        FROM evntnot, evnttype, item, whsinfo
-        WHERE ( (evntnot_evnttype_id=evnttype_id)
-         AND (evntnot_warehous_id=NEW.itemsite_warehous_id)
-         AND (NEW.itemsite_item_id=item_id)
-         AND (NEW.itemsite_warehous_id=warehous_id)
-         AND (evnttype_name='QOHBelowZero') );
+        PERFORM postEvent('QOHBelowZero', 'I', NEW.itemsite_id,
+                          warehous_id,
+                          (item_number || '/' || warehous_code),
+                          NULL, NULL, NULL, NULL)
+        FROM item, whsinfo
+        WHERE (item_id=NEW.itemsite_item_id)
+          AND (warehous_id=NEW.itemsite_warehous_id);
       END IF;
     END IF;
     IF ( (NEW.itemsite_value <> OLD.itemsite_value) AND (OLD.itemsite_freeze) ) THEN

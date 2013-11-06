@@ -28,21 +28,15 @@ BEGIN
 
   IF (pBySO) THEN
     --Generate the PoItemUpdatedBySo event
-    INSERT INTO evntlog
-                ( evntlog_evnttime, evntlog_username, evntlog_evnttype_id,
-                  evntlog_ordtype, evntlog_ord_id, evntlog_warehous_id,
-                  evntlog_number )
-    SELECT CURRENT_TIMESTAMP, evntnot_username, evnttype_id,
-           'P', poitem_id, itemsite_warehous_id,
-            (pohead_number || '-'|| poitem_linenumber || ': ' || item_number)
-    FROM evntnot JOIN evnttype ON (evntnot_evnttype_id=evnttype_id)
-                 JOIN itemsite ON (evntnot_warehous_id=itemsite_warehous_id)
-                 JOIN item ON (itemsite_item_id=item_id)
-                 JOIN poitem ON (poitem_itemsite_id=itemsite_id)
-                 JOIN pohead ON (poitem_pohead_id=pohead_id)
-            WHERE( (poitem_id=pPoitemid)
-            AND (poitem_duedate <= (CURRENT_DATE + itemsite_eventfence))
-            AND (evnttype_name='PoItemUpdatedBySo') );
+    PERFORM postEvent('PoItemUpdatedBySo', 'P', poitem_id,
+                      itemsite_warehous_id,
+                      (pohead_number || '-'|| poitem_linenumber || ': ' || item_number),
+                      NULL, NULL, NULL, NULL)
+    FROM poitem JOIN pohead ON (pohead_id=poitem_pohead_id)
+                JOIN itemsite ON (itemsite_id=poitem_itemsite_id)
+                JOIN item ON (item_id=itemsite_item_id)
+    WHERE (poitem_id=pPoitemid)
+      AND (poitem_duedate <= (CURRENT_DATE + itemsite_eventfence));
   END IF;
 
   RETURN pPoitemid;
