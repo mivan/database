@@ -240,11 +240,13 @@ BEGIN
           END IF;
         ELSE
           -- unusual condition where bank overridden and different currency from voucher
-          IF (_r.apopen_docdate > _p.checkhead_checkdate) THEN
-            _exchGainTmp := ((_r.checkitem_amount/_r.checkitem_curr_rate) - (_r.checkitem_amount / _r.apopen_curr_rate)) * -1;
-          ELSE
-            _exchGainTmp := ((_r.checkitem_amount / _r.apopen_curr_rate) - (_r.checkitem_amount/_r.checkitem_curr_rate));
-          END IF;
+          -- this does not work for all situations
+          --IF (_r.apopen_docdate > _p.checkhead_checkdate) THEN
+          --  _exchGainTmp := ((_r.checkitem_amount/_r.checkitem_curr_rate) - (_r.checkitem_amount / _r.apopen_curr_rate)) * -1;
+          --ELSE
+          --  _exchGainTmp := ((_r.checkitem_amount / _r.apopen_curr_rate) - (_r.checkitem_amount/_r.checkitem_curr_rate));
+          --END IF;
+          _exchGainTmp := 0.0;
         END IF;
       ELSE
         SELECT arCurrGain(_r.aropen_id,_r.checkitem_curr_id, _r.checkitem_amount,
