@@ -1,10 +1,3 @@
--- Function: copyproject(integer, text, text, date)
-
--- DROP the old, existing function as it is no longer used and has different parameters
-DROP FUNCTION copyproject(integer, text, integer);
-
--- DROP FUNCTION copyproject(integer, text, text, date);
-
 CREATE OR REPLACE FUNCTION copyproject(integer, text, text, date)
   RETURNS integer AS
 $BODY$
