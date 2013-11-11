@@ -62,6 +62,6 @@ RETURN _returnCode;
 
 END;
 $BODY$
-  LANGUAGE plpgsql STABLE
+  LANGUAGE plpgsql STABLE;
 ALTER FUNCTION public.compareversion(text, text)
   OWNER TO admin;
