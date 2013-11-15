@@ -1,3 +1,6 @@
+-- this should be deleted
+
+
 ALTER TABLE itemsrc DROP CONSTRAINT itemsrc_itemsrc_vend_id_key;
 
 ALTER TABLE itemsrc
