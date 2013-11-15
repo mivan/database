@@ -1,3 +1,6 @@
+-- this should be deleted
+
+
 -- Table: contisrc
 
 -- DROP TABLE contisrc;
