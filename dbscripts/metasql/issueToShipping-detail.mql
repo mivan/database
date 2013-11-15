@@ -78,7 +78,7 @@ WHERE ( (coitem_status NOT IN ('C','X'))
 <? elseif exists("tohead_id") ?>
 
 SELECT toitem_id AS lineitem_id, 
-       0 AS lsJob, 0 AS indent
+       0 AS lsJob, 0 AS indent,
        MIN(s1.shiphead_number) AS shiphead_number, 
        toitem_linenumber AS linenumber, item_number,
        (item_descrip1 || ' ' || item_descrip2) AS itemdescrip,
