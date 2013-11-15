@@ -702,6 +702,7 @@
   <createfunction file="functions/qtylocation.sql"                    name="qtylocation" />
   <createfunction file="functions/qtyordered.sql"                     name="qtyordered" />
   <createfunction file="functions/qtypr.sql"                          name="qtypr" />
+  <createfunction file="functions/qtyreserved.sql"                    name="qtyreserved" />
   <createfunction file="functions/qtytoreceive.sql"                   name="qtytoreceive" />
   <createfunction file="functions/recallshipment.sql"                 name="recallshipment" />
   <createfunction file="functions/recallwo.sql"                       name="recallwo" />
