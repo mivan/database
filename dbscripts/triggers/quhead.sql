@@ -144,13 +144,27 @@ BEGIN
       END IF;
       
       --Auto create project if applicable
-      IF ((TG_OP = 'INSERT') AND (NEW.quhead_prj_id=-1)) THEN
+      IF ((TG_OP = 'INSERT') AND (COALESCE(NEW.quhead_prj_id,-1)=-1)) THEN
         SELECT fetchMetricBool('AutoCreateProjectsForOrders') INTO _check;
         IF (_check) THEN
           SELECT NEXTVAL('prj_prj_id_seq') INTO _prjId;
           NEW.quhead_prj_id := _prjId;
-          INSERT INTO prj (prj_id, prj_number, prj_name, prj_descrip, prj_so, prj_wo, prj_po)
-               VALUES(_prjId, NEW.quhead_number, NEW.quhead_number, 'Auto Generated Project from Quote.', TRUE, TRUE, TRUE);
+          INSERT INTO prj (prj_id, prj_number, prj_name, prj_descrip,
+                           prj_status, prj_so, prj_wo, prj_po,
+                           prj_owner_username, prj_start_date, prj_due_date,
+                           prj_assigned_date, prj_completed_date, prj_username,
+                           prj_recurring_prj_id, prj_crmacct_id,
+                           prj_cntct_id, prj_prjtype_id)
+          SELECT _prjId, NEW.quhead_number, NEW.quhead_number, 'Auto Generated Project from Quote.',
+                 'O', TRUE, TRUE, TRUE,
+                 getEffectiveXTUser(), NEW.quhead_quotedate, NEW.quhead_packdate,
+                 NEW.quhead_quotedate, NULL, getEffectiveXTUser(),
+                 NULL, crmacct_id,
+                 NEW.quhead_billto_cntct_id, NULL
+          FROM crmacct
+          WHERE (crmacct_cust_id=NEW.quhead_cust_id)
+             OR (crmacct_prospect_id=NEW.quhead_cust_id)
+          LIMIT 1;
         END IF;
       END IF;
 
