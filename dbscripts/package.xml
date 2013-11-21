@@ -481,6 +481,7 @@
   <createfunction file="functions/getpacklistitemlotserial.sql"       name="getpacklistitemlotserial" />
   <createfunction file="functions/getperiodid.sql"                    name="getperiodid" />
   <createfunction file="functions/getpkgheadid.sql"                   name="getpkgheadid" />
+  <createfunction file="functions/getopenshipment.sql"                name="getopenshipment" />
   <createfunction file="functions/getplancodeid.sql"                  name="getplancodeid" />
   <createfunction file="functions/getpoheadid.sql"                    name="getpoheadid" />
   <createfunction file="functions/getpoitemid.sql"                    name="getpoitemid" />
@@ -507,6 +508,7 @@
   <createfunction file="functions/getshipviaid.sql"                   name="getshipviaid" />
   <createfunction file="functions/getshipzoneid.sql"                  name="getshipzoneid" />
   <createfunction file="functions/getsitetypeid.sql"                  name="getsitetypeid" />
+  <createfunction file="functions/getsoitemstatus.sql"                name="getsoitemstatus" />
   <createfunction file="functions/getsoscheddate.sql"                 name="getsoscheddate" />
   <createfunction file="functions/getsostatus.sql"                    name="getsostatus" />
   <createfunction file="functions/getsubtax.sql"                      name="getsubtax" />
@@ -1100,6 +1102,7 @@
   <loadmetasql file="metasql/package-items.mql" />
   <loadmetasql file="metasql/packingList-getreport.mql" />
   <loadmetasql file="metasql/packingList-shipment.mql" />
+  <loadmetasql file="metasql/packingListBatch-clear.mql" />
   <loadmetasql file="metasql/packingListBatch-detail.mql" />
   <loadmetasql file="metasql/packingListBatch-print.mql" />
   <loadmetasql file="metasql/packingListBatchByShipVia-print.mql" />

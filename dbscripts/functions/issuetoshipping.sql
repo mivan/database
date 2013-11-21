@@ -89,11 +89,9 @@ BEGIN
     END IF; 
   
     SELECT shiphead_id INTO _shipheadid
-    FROM shiphead, coitem
-    WHERE ((shiphead_order_id=coitem_cohead_id)
-      AND  (NOT shiphead_shipped)
-      AND  (coitem_id=pitemid)
-      AND  (shiphead_order_type=pordertype));
+    FROM shiphead, coitem JOIN itemsite ON (itemsite_id=coitem_itemsite_id)
+    WHERE ( (coitem_id=pitemid)
+      AND   (shiphead_number=getOpenShipment(pordertype, coitem_cohead_id, itemsite_warehous_id)) );
     IF (NOT FOUND) THEN
       SELECT NEXTVAL('shiphead_shiphead_id_seq') INTO _shipheadid;
 
@@ -241,11 +239,9 @@ BEGIN
     WHERE (invhist_id=_invhistid);
 
     SELECT shiphead_id INTO _shipheadid
-    FROM shiphead, toitem
-    WHERE ((shiphead_order_id=toitem_tohead_id)
-      AND  (NOT shiphead_shipped)
-      AND  (toitem_id=pitemid)
-      AND  (shiphead_order_type=pordertype));
+    FROM shiphead, toitem JOIN tohead ON (tohead_id=toitem_tohead_id)
+    WHERE ( (toitem_id=pitemid)
+      AND   (shiphead_number=getOpenShipment(pordertype, tohead_id, tohead_src_warehous_id)) );
 
     IF (NOT FOUND) THEN
       _shipheadid := NEXTVAL('shiphead_shiphead_id_seq');
