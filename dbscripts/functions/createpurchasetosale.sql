@@ -289,7 +289,7 @@ BEGIN
         poitem_unitprice, poitem_vend_item_number, 
         poitem_itemsrc_id, poitem_order_id, poitem_order_type, poitem_prj_id, poitem_stdcost, 
         poitem_manuf_name, poitem_manuf_item_number, 
-        poitem_manuf_item_descrip, poitem_taxtype_id )
+        poitem_manuf_item_descrip, poitem_taxtype_id, poitem_comments )
     VALUES
       ( _poitemid, 'U', _poheadid, _polinenumber,
         COALESCE(pDueDate, _s.coitem_scheddate), _s.coitem_itemsite_id,
@@ -298,7 +298,8 @@ BEGIN
         _price, COALESCE(_i.itemsrc_vend_item_number, TEXT('')),
         pItemSourceId, pCoitemId, 'S', _s.cohead_prj_id, stdcost(_i.itemsrc_item_id),
         COALESCE(_i.itemsrc_manuf_name, TEXT('')), COALESCE(_i.itemsrc_manuf_item_number, TEXT('')),
-        COALESCE(_i.itemsrc_manuf_item_descrip, TEXT('')), _taxtypeid );
+        COALESCE(_i.itemsrc_manuf_item_descrip, TEXT('')), _taxtypeid,
+        COALESCE(_s.coitem_memo, TEXT('')));
   END IF;
   -- Copy characteristics from the coitem to the poitem
   INSERT INTO charass
