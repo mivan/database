@@ -9,6 +9,9 @@
        item_number, uom_name,
        (item_descrip1 || ' ' || item_descrip2) AS item_descrip,
        contrct_number,
+       COALESCE( (SELECT SUM(poitem_qty_ordered)
+                  FROM poitem
+                  WHERE (poitem_itemsrc_id=itemsrc_id)), 0.0) AS purchased_qty,
        itemsrc.*,
        'qty' AS itemsrc_invvendoruomratio_xtnumericrole,
        CASE WHEN COALESCE(itemsrc_effective, startOfTime()) <=
