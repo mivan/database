@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION calcSalesOrderAmt(pCoheadid INTEGER) RETURNS NUMERIC AS $$
+CREATE OR REPLACE FUNCTION calcSalesOrderAmt(pCoheadid INTEGER) RETURNS NUMERIC STABLE AS $$
 -- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 BEGIN
@@ -9,16 +9,17 @@ END;
 $$ LANGUAGE 'plpgsql';
 
 CREATE OR REPLACE FUNCTION calcSalesOrderAmt(pCoheadid INTEGER,
-                                             pType TEXT) RETURNS NUMERIC AS $$
+                                             pType TEXT) RETURNS NUMERIC STABLE AS $$
 -- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
-  _subtotal NUMERIC := 0;
-  _tax NUMERIC := 0;
-  _freight NUMERIC := 0;
-  _misc NUMERIC := 0;
-  _credit NUMERIC := 0;
-  _amount NUMERIC := 0;
+  _subtotal NUMERIC := 0.0;
+  _cost NUMERIC := 0.0;
+  _tax NUMERIC := 0.0;
+  _freight NUMERIC := 0.0;
+  _misc NUMERIC := 0.0;
+  _credit NUMERIC := 0.0;
+  _amount NUMERIC := 0.0;
 
 BEGIN
 
@@ -27,9 +28,16 @@ BEGIN
   --        B = balance due
   --        C = allocated credits
   --        X = tax
+  --        M = margin
 
   SELECT COALESCE(SUM(ROUND((coitem_qtyord * coitem_qty_invuomratio) *
                             (coitem_price / coitem_price_invuomratio), 2)), 0) INTO _subtotal
+  FROM coitem
+  WHERE (coitem_cohead_id=pCoheadid)
+    AND (coitem_status != 'X');
+
+  SELECT COALESCE(SUM(ROUND((coitem_qtyord * coitem_qty_invuomratio) *
+                            coitem_unitcost, 2)), 0) INTO _cost
   FROM coitem
   WHERE (coitem_cohead_id=pCoheadid)
     AND (coitem_status != 'X');
@@ -53,6 +61,7 @@ BEGIN
                         WHEN 'B' THEN (_subtotal + _tax + _freight + _misc - _credit)
                         WHEN 'C' THEN (_credit)
                         WHEN 'X' THEN (_tax)
+                        WHEN 'M' THEN (_subtotal - _cost)
                         ELSE 0.0
              END;
 

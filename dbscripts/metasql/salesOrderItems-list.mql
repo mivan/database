@@ -25,6 +25,7 @@ SELECT coitem_id, coitem_altid, groupby,
        CASE WHEN (extprice_shipped > 0.0) THEN formatMoney(extprice_shipped) ELSE NULL END AS f_extprice_shipped,
 -- end formatted columns
        coitem_scheddate, coitem_price, coitem_custprice, discountfromcust,
+       coitem_unitcost, margin, marginpercent,
        coitem_qtyord, qtyshipped, balance, qtyatshipping,
        extprice, extprice_shipped,
        CASE WHEN (discountfromcust=100.0) THEN 'N/A' END AS discountfromcust_qtdisplayrole,
@@ -36,6 +37,7 @@ SELECT coitem_id, coitem_altid, groupby,
        'qty' AS packweight_xtnumericrole,
        'salesprice' AS coitem_price_xtnumericrole,
        'salesprice' AS coitem_custprice_xtnumericrole,
+       'cost' AS coitem_unitcost_xtnumericrole,
        'curr' AS extprice_xtnumericrole,
        'curr' AS extprice_shipped_xtnumericrole,
        CASE WHEN fetchMetricBool('EnableSOShipping') AND
@@ -115,6 +117,12 @@ SELECT coitem_id,
        CASE WHEN (coitem_custprice = 0.0) THEN 100.0
             ELSE ((1.0 - (coitem_price / coitem_custprice)) * 100.0)
        END AS discountfromcust,
+       coitem_unitcost,
+       ROUND((coitem_qtyord * coitem_qty_invuomratio) *
+             ((coitem_price / coitem_price_invuomratio) - coitem_unitcost),2) AS margin,
+       CASE WHEN (coitem_price = 0.0) THEN 100.0
+            ELSE (((coitem_price - coitem_unitcost) / coitem_price) * 100.0)
+       END AS marginpercent,
        noNeg(coitem_qtyshipped - coitem_qtyreturned) AS qtyshipped,
        noNeg(coitem_qtyord - coitem_qtyshipped + coitem_qtyreturned) AS balance,
        qtyAtShipping('SO', coitem_id) AS qtyatshipping,
