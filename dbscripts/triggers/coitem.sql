@@ -552,6 +552,12 @@ BEGIN
         END IF;
       END IF;
     END IF;
+
+    -- Update Purchase Order comments
+    IF (NEW.coitem_order_type='P') THEN
+      UPDATE poitem SET poitem_comments=NEW.coitem_memo
+      WHERE ((poitem_order_id=NEW.coitem_id) AND (poitem_order_type='S'));
+    END IF;
   END IF;
 
   IF (TG_OP = 'UPDATE') THEN
@@ -567,6 +573,10 @@ BEGIN
                     JOIN pohead ON (pohead_id=poitem_pohead_id)
         WHERE ( (poitem_id=OLD.coitem_order_id)
           AND   (poitem_duedate <= (CURRENT_DATE + itemsite_eventfence)) );
+      --If soitem notes changed
+      ELSIF (NEW.coitem_memo <> OLD.coitem_memo) THEN 
+        UPDATE poitem SET poitem_comments=NEW.coitem_memo
+        WHERE ((poitem_order_id=NEW.coitem_id) AND (poitem_order_type='S'));
       END IF;
     END IF;
   END IF;
