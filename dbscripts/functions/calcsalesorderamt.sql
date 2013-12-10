@@ -31,30 +31,29 @@ BEGIN
   --        M = margin
 
   SELECT COALESCE(SUM(ROUND((coitem_qtyord * coitem_qty_invuomratio) *
-                            (coitem_price / coitem_price_invuomratio), 2)), 0) INTO _subtotal
+                            (coitem_price / coitem_price_invuomratio), 2)), 0.0),
+         COALESCE(SUM(ROUND((coitem_qtyord * coitem_qty_invuomratio) *
+                            coitem_unitcost, 2)), 0.0)
+         INTO _subtotal, _cost
   FROM coitem
   WHERE (coitem_cohead_id=pCoheadid)
     AND (coitem_status != 'X');
 
-  SELECT COALESCE(SUM(ROUND((coitem_qtyord * coitem_qty_invuomratio) *
-                            coitem_unitcost, 2)), 0) INTO _cost
-  FROM coitem
-  WHERE (coitem_cohead_id=pCoheadid)
-    AND (coitem_status != 'X');
+  IF (pType IN ('T', 'B', 'X')) THEN
+    SELECT ROUND(SUM(taxdetail_tax), 2) INTO _tax
+    FROM calculateTaxDetailSummary('S', pCoheadid, 'T');
+  END IF;
 
-  SELECT COALESCE(SUM(tax), 0) INTO _tax
-  FROM ( SELECT ROUND(SUM(taxdetail_tax), 2) AS tax
-         FROM tax JOIN calculateTaxDetailSummary('S', pCoheadid, 'T') ON (taxdetail_tax_id=tax_id)
-         GROUP BY tax_id ) AS data;
-
-  SELECT COALESCE(cohead_freight, 0), COALESCE(cohead_misc, 0),
-         COALESCE(SUM(currToCurr(aropenalloc_curr_id, cohead_curr_id,
-                                 aropenalloc_amount, CURRENT_DATE)),0)
-         INTO _freight, _misc, _credit
-  FROM cohead
-       LEFT OUTER JOIN aropenalloc ON (aropenalloc_doctype='S' AND aropenalloc_doc_id=cohead_id)
-  WHERE (cohead_id=pCoheadid)
-  GROUP BY cohead_freight, cohead_misc, cohead_curr_id;
+  IF (pType IN ('T', 'B', 'C')) THEN
+    SELECT COALESCE(cohead_freight, 0), COALESCE(cohead_misc, 0),
+           COALESCE(SUM(currToCurr(aropenalloc_curr_id, cohead_curr_id,
+                                   aropenalloc_amount, CURRENT_DATE)),0)
+           INTO _freight, _misc, _credit
+    FROM cohead
+         LEFT OUTER JOIN aropenalloc ON (aropenalloc_doctype='S' AND aropenalloc_doc_id=cohead_id)
+    WHERE (cohead_id=pCoheadid)
+    GROUP BY cohead_freight, cohead_misc, cohead_curr_id;
+  END IF;
 
   _amount := CASE pType WHEN 'S' THEN (_subtotal)
                         WHEN 'T' THEN (_subtotal + _tax + _freight + _misc)
