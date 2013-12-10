@@ -83,7 +83,7 @@ BEGIN
   WHERE ((aropenalloc_doctype='S')
     AND  (aropenalloc_doc_id=pSoheadid));
 
-  IF (NOT _r.cohead_wasquote) THEN
+  IF ( (NOT _r.cohead_wasquote) AND (NOT _r.cohead_imported) ) THEN
     IF (COALESCE(pSonumber,'') != '') THEN
       _result = releaseSoNumber(pSonumber);
     ELSEIF (_r.cohead_number IS NOT NULL) THEN
