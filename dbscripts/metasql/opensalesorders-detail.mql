@@ -20,6 +20,8 @@ SELECT DISTINCT
 <? endforeach ?>
        firstline(cohead_ordercomments) AS notes,
        calcSalesOrderAmt(cohead_id) AS ordertotal,
+       (calcSalesOrderAmt(cohead_id,'M') / calcSalesOrderAmt(cohead_id,'S')) AS ordermarginpercent,
+       'percent' AS ordermarginpercent_xtnumericrole,
        'extprice' AS ordertotal_xtnumericrole
 FROM cohead 
      JOIN custinfo ON (cohead_cust_id=cust_id) 
