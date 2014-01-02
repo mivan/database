@@ -1,5 +1,5 @@
 CREATE OR REPLACE FUNCTION calcQuoteAmt(pQuheadid INTEGER) RETURNS NUMERIC STABLE AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 BEGIN
 
@@ -10,7 +10,7 @@ $$ LANGUAGE 'plpgsql';
 
 CREATE OR REPLACE FUNCTION calcQuoteAmt(pQuheadid INTEGER,
                                         pType TEXT) RETURNS NUMERIC STABLE AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
   _subtotal NUMERIC := 0.0;
