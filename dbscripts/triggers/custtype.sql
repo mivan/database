@@ -1,5 +1,5 @@
 CREATE OR REPLACE FUNCTION _custtypeTrigger() RETURNS TRIGGER AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
   _check      BOOLEAN;
@@ -32,7 +32,7 @@ SELECT dropIfExists('TRIGGER', 'custtypeTrigger');
 CREATE TRIGGER custtypeTrigger BEFORE INSERT OR UPDATE ON custtype FOR EACH ROW EXECUTE PROCEDURE _custtypeTrigger();
 
 CREATE OR REPLACE FUNCTION _custtypeAfterDeleteTrigger() RETURNS TRIGGER AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 BEGIN
   IF (SELECT fetchMetricValue('DefaultCustType') = OLD.custtype_id) THEN
