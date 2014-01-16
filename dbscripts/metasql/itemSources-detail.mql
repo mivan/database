@@ -1,7 +1,7 @@
 -- Group: itemSources
 -- Name: detail
 -- Notes: 
---        Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple.
+--        Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple.
 --        See www.xtuple.com/CPAL for the full text of the software license.
 <? if not exists("defaultOnly") ?>
   SELECT itemsrc_id, 
@@ -9,6 +9,9 @@
        item_number, uom_name,
        (item_descrip1 || ' ' || item_descrip2) AS item_descrip,
        contrct_number,
+       COALESCE( (SELECT SUM(poitem_qty_ordered)
+                  FROM poitem
+                  WHERE (poitem_itemsrc_id=itemsrc_id)), 0.0) AS purchased_qty,
        itemsrc.*,
        'qty' AS itemsrc_invvendoruomratio_xtnumericrole,
        CASE WHEN COALESCE(itemsrc_effective, startOfTime()) <=

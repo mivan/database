@@ -1,5 +1,5 @@
 CREATE OR REPLACE FUNCTION _quitemtrigger() RETURNS "trigger" AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
   _changelog BOOLEAN := FALSE;
@@ -73,7 +73,7 @@ CREATE TRIGGER quitemtrigger
   EXECUTE PROCEDURE _quitemtrigger();
 
 CREATE OR REPLACE FUNCTION _quitemBeforeTrigger() RETURNS TRIGGER AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
   _check NUMERIC;
@@ -113,7 +113,7 @@ CREATE TRIGGER quitemBeforeTrigger
 
 
 CREATE OR REPLACE FUNCTION _quitemAfterTrigger() RETURNS TRIGGER AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
   _check NUMERIC;

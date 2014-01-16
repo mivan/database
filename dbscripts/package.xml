@@ -491,6 +491,7 @@
   <createfunction file="functions/getprodcatid.sql"                   name="getprodcatid" />
   <createfunction file="functions/getprospectid.sql"                  name="getprospectid" />
   <createfunction file="functions/getquoteid.sql"                     name="getquoteid" />
+  <createfunction file="functions/getquotescheddate.sql"              name="getquotescheddate" />
   <createfunction file="functions/getquotelineitemid.sql"             name="getquotelineitemid" />
   <createfunction file="functions/getrevid.sql"                       name="getrevid" />
   <createfunction file="functions/getrsnid.sql"                       name="getrsnid" />
@@ -1130,6 +1131,7 @@
   <loadmetasql file="metasql/purchaseOrders-detail.mql" />
   <loadmetasql file="metasql/qoh-detail.mql" />
   <loadmetasql file="metasql/quoteItems-detail.mql" />
+  <loadmetasql file="metasql/quoteItems-list.mql" />
   <loadmetasql file="metasql/quotes-detail.mql" />
   <loadmetasql file="metasql/receipt-detail.mql" />
   <loadmetasql file="metasql/receipt-receiveAll.mql" />

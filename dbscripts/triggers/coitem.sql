@@ -1,5 +1,5 @@
 CREATE OR REPLACE FUNCTION _soitemTrigger() RETURNS TRIGGER AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
   _changelog BOOLEAN := FALSE;
@@ -234,7 +234,7 @@ SELECT dropIfExists('TRIGGER', 'soitemTrigger');
 CREATE TRIGGER soitemTrigger BEFORE INSERT OR UPDATE ON coitem FOR EACH ROW EXECUTE PROCEDURE _soitemTrigger();
 
 CREATE OR REPLACE FUNCTION _soitemBeforeTrigger() RETURNS TRIGGER AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
   _check NUMERIC;
@@ -421,7 +421,7 @@ CREATE TRIGGER soitemBeforeTrigger BEFORE INSERT OR UPDATE ON coitem FOR EACH RO
 
 
 CREATE OR REPLACE FUNCTION _soitemAfterTrigger() RETURNS TRIGGER AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
   _check NUMERIC;
@@ -552,6 +552,12 @@ BEGIN
         END IF;
       END IF;
     END IF;
+
+    -- Update Purchase Order comments
+    IF (NEW.coitem_order_type='P') THEN
+      UPDATE poitem SET poitem_comments=NEW.coitem_memo
+      WHERE ((poitem_order_id=NEW.coitem_id) AND (poitem_order_type='S'));
+    END IF;
   END IF;
 
   IF (TG_OP = 'UPDATE') THEN
@@ -567,6 +573,10 @@ BEGIN
                     JOIN pohead ON (pohead_id=poitem_pohead_id)
         WHERE ( (poitem_id=OLD.coitem_order_id)
           AND   (poitem_duedate <= (CURRENT_DATE + itemsite_eventfence)) );
+      --If soitem notes changed
+      ELSIF (NEW.coitem_memo <> OLD.coitem_memo) THEN 
+        UPDATE poitem SET poitem_comments=NEW.coitem_memo
+        WHERE ((poitem_order_id=NEW.coitem_id) AND (poitem_order_type='S'));
       END IF;
     END IF;
   END IF;
@@ -664,7 +674,7 @@ SELECT dropIfExists('TRIGGER', 'soitemAfterTrigger');
 CREATE TRIGGER soitemAfterTrigger AFTER INSERT OR UPDATE ON coitem FOR EACH ROW EXECUTE PROCEDURE _soitemAfterTrigger();
 
 CREATE OR REPLACE FUNCTION _soitemBeforeDeleteTrigger() RETURNS TRIGGER AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
 
@@ -749,7 +759,7 @@ SELECT dropIfExists('TRIGGER', 'soitemBeforeDeleteTrigger');
 CREATE TRIGGER soitemBeforeDeleteTrigger BEFORE DELETE ON coitem FOR EACH ROW EXECUTE PROCEDURE _soitemBeforeDeleteTrigger();
 
 CREATE OR REPLACE FUNCTION _soitemAfterDeleteTrigger() RETURNS TRIGGER AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
 
