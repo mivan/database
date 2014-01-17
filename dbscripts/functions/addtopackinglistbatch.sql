@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION addToPackingListBatch(INTEGER) RETURNS INTEGER AS '
+CREATE OR REPLACE FUNCTION addToPackingListBatch(INTEGER) RETURNS INTEGER AS $$
 -- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
@@ -7,30 +7,30 @@ DECLARE
 BEGIN
 
   -- MIN because error codes are negative
-  SELECT MIN(addToPackingListBatch(''SO'', pSoheadid, shiphead_id)) INTO returnVal
+  SELECT MIN(addToPackingListBatch('SO', pSoheadid, shiphead_id)) INTO returnVal
   FROM shiphead
   WHERE ((shiphead_order_id=pSoheadid)
     AND  (NOT shiphead_shipped)
-    AND  (shiphead_order_type=''SO''));
+    AND  (shiphead_order_type='SO'));
   IF (NOT FOUND OR returnVal IS NULL) THEN
-    returnVal := addToPackingListBatch(''SO'', pSoheadid, NULL);
+    returnVal := addToPackingListBatch('SO', pSoheadid, NULL);
   END IF;
 
   RETURN returnVal;
 END;
-' LANGUAGE 'plpgsql';
+$$ LANGUAGE 'plpgsql';
 
 
-CREATE OR REPLACE FUNCTION addToPackingListBatch(INTEGER, INTEGER) RETURNS INTEGER AS '
+CREATE OR REPLACE FUNCTION addToPackingListBatch(INTEGER, INTEGER) RETURNS INTEGER AS $$
 -- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 BEGIN
-  RETURN addToPackingListBatch(''SO'', $1, $2);
+  RETURN addToPackingListBatch('SO', $1, $2);
 END;
-' LANGUAGE 'plpgsql';
+$$ LANGUAGE 'plpgsql';
 
 
-CREATE OR REPLACE FUNCTION addToPackingListBatch(TEXT, INTEGER) RETURNS INTEGER AS '
+CREATE OR REPLACE FUNCTION addToPackingListBatch(TEXT, INTEGER) RETURNS INTEGER AS $$
 -- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
@@ -51,10 +51,32 @@ BEGIN
 
   RETURN returnVal;
 END;
-' LANGUAGE 'plpgsql';
+$$ LANGUAGE 'plpgsql';
 
 
-CREATE OR REPLACE FUNCTION addToPackingListBatch(TEXT, INTEGER, INTEGER) RETURNS INTEGER AS '
+CREATE OR REPLACE FUNCTION addToPackingListBatch(INTEGER, TEXT, INTEGER) RETURNS INTEGER AS $$
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
+-- See www.xtuple.com/CPAL for the full text of the software license.
+DECLARE
+  pwarehousid	ALIAS FOR $1;
+  pheadtype	ALIAS FOR $2;
+  pheadid	ALIAS FOR $3;
+  returnVal	INTEGER;
+BEGIN
+  -- MIN because error codes are negative
+  SELECT MIN(addToPackingListBatch(pheadtype, pheadid,
+                                   getOpenShipmentId(pheadtype, pheadid, pwarehousid))) INTO returnVal;
+
+  IF (NOT FOUND OR returnVal IS NULL) THEN
+    returnVal := addToPackingListBatch(pheadtype, pheadid, NULL);
+  END IF;
+
+  RETURN returnVal;
+END;
+$$ LANGUAGE 'plpgsql';
+
+
+CREATE OR REPLACE FUNCTION addToPackingListBatch(TEXT, INTEGER, INTEGER) RETURNS INTEGER AS $$
 -- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
@@ -78,7 +100,7 @@ BEGIN
     VALUES
     ( pheadtype, pheadid, pshipheadid, FALSE );
     -- Auto Firm Sales Orders conditionally based on metric
-    IF ( (pheadtype = ''SO'') AND (fetchMetricBool(''FirmSalesOrderPackingList'')) ) THEN
+    IF ( (pheadtype = 'SO') AND (fetchMetricBool('FirmSalesOrderPackingList')) ) THEN
       UPDATE coitem SET coitem_firm=TRUE
       WHERE (coitem_cohead_id=pheadid);
     END IF; 
@@ -87,4 +109,4 @@ BEGIN
   RETURN pheadid;
 
 END;
-' LANGUAGE 'plpgsql';
+$$ LANGUAGE 'plpgsql';
