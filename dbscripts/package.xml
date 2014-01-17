@@ -74,6 +74,7 @@
   <createfunction file="functions/calcbillingamts.sql"                name="calccobillamt" />
   <createfunction file="functions/calccashbudget.sql"                 name="calccashbudget" />
   <createfunction file="functions/calccreditmemoamts.sql"             name="calccmheadamt" />
+  <createfunction file="functions/calcinvoiceamt.sql"                 name="calcinvoiceamt" />
   <createfunction file="functions/calcpendingarapplications.sql"      name="calcpendingarapplications" />
   <createfunction file="functions/calcquoteamt.sql"                   name="calcquoteamt" />
   <createfunction file="functions/calcsalesorderamt.sql"              name="calcsalesorderamt" />
