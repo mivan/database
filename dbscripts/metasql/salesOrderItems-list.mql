@@ -87,29 +87,7 @@ SELECT coitem_id,
        (coitem_qtyord / coitem_qty_invuomratio * item_prodweight) AS prodweight,
        (coitem_qtyord / coitem_qty_invuomratio * item_packweight) AS packweight,
        coitem_status, coitem_firm,
-      (CASE WHEN (coitem_status='O' AND (SELECT cust_creditstatus FROM custinfo WHERE cust_id=cohead_cust_id)='H') THEN 'H'
-            WHEN (coitem_status='O' AND ((SELECT SUM(invcitem_billed)
-                                            FROM cohead, invchead, invcitem
-                                           WHERE ((CAST(invchead_ordernumber AS text)=cohead_number)
-                                             AND  (invcitem_invchead_id=invchead_id)
-                                             AND  (invcitem_item_id=item_id)
-                                             AND  (invcitem_warehous_id=warehous_id)
-                                             AND  (invcitem_linenumber=coitem_linenumber)
-                                             AND  (cohead_id=coitem_cohead_id))) >= coitem_qtyord)) THEN 'I'
-            WHEN (coitem_status='O' AND ((SELECT SUM(invcitem_billed)
-                                            FROM cohead, invchead, invcitem
-                                           WHERE ((CAST(invchead_ordernumber AS text)=cohead_number)
-                                             AND  (invcitem_invchead_id=invchead_id)
-                                             AND  (invcitem_item_id=item_id)
-                                             AND  (invcitem_warehous_id=warehous_id)
-                                             AND  (invcitem_linenumber=coitem_linenumber)
-                                             AND  (cohead_id=coitem_cohead_id))) > 0)) THEN 'P'
-            WHEN (coitem_status='O' AND (itemsite_qtyonhand - qtyAllocated(itemsite_id, CURRENT_DATE)
-                                         + qtyOrdered(itemsite_id, CURRENT_DATE))
-                                          >= ((coitem_qtyord - coitem_qtyshipped + coitem_qtyreturned) * coitem_qty_invuomratio)) THEN 'R'
-            ELSE coitem_status END
-       || CASE WHEN (coitem_firm) THEN 'F' ELSE '' END
-       ) AS enhanced_status,
+       getSoitemStatus(coitem_id) AS enhanced_status,
        quom.uom_name AS qty_uom, puom.uom_name AS price_uom,
        itemSellingUOM(item_id) AS ship_uom,
        coitem_memo,
