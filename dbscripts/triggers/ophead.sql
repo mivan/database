@@ -1,5 +1,5 @@
 CREATE OR REPLACE FUNCTION _opheadBeforeTrigger () RETURNS TRIGGER AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
   _rec record;
@@ -21,6 +21,12 @@ BEGIN
     END IF;
   END IF;
 
+  IF (TG_OP = 'INSERT') THEN
+    IF (SELECT opstage_opinactive FROM opstage WHERE opstage_id=NEW.ophead_opstage_id) THEN
+      NEW.ophead_active := FALSE;
+    END IF;
+  END IF;
+
   RETURN NEW;
 END;
 $$ LANGUAGE 'plpgsql';
@@ -30,7 +36,7 @@ CREATE TRIGGER opheadBeforeTrigger BEFORE INSERT OR UPDATE ON ophead
 FOR EACH ROW EXECUTE PROCEDURE _opheadBeforeTrigger();
 
 CREATE OR REPLACE FUNCTION _opheadAfterTrigger () RETURNS TRIGGER AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
   _cmnttypeid INTEGER;

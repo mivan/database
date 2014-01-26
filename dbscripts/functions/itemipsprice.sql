@@ -9,7 +9,7 @@ CREATE OR REPLACE FUNCTION itemIpsPrice(pItemid INTEGER,
                                         pEffective DATE,
                                         pAsOf DATE,
                                         pSiteid INTEGER) RETURNS SETOF itemprice AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
   _row  itemprice%ROWTYPE;
@@ -65,9 +65,9 @@ BEGIN
                (ipsitem_price * itemuomtouomratio(_item.item_id, pPriceUOM, ipsitem_price_uom_id))
               WHEN (ipsitem_type = 'D') THEN
                noNeg(_item.item_listprice - (_item.item_listprice * ipsitem_discntprcnt) - ipsitem_fixedamtdiscount) * _iteminvpricerat
-              WHEN ((ipsitem_type = 'M') AND (ipsitem_discntprcnt <= 0.5) AND _long30markups AND _wholesalepricecosting) THEN
+              WHEN ((ipsitem_type = 'M') AND _long30markups AND _wholesalepricecosting) THEN
                (_item.item_listcost / (1.0 - ipsitem_discntprcnt) + ipsitem_fixedamtdiscount) * _iteminvpricerat
-              WHEN ((ipsitem_type = 'M') AND (ipsitem_discntprcnt <= 0.5) AND _long30markups) THEN
+              WHEN ((ipsitem_type = 'M') AND _long30markups) THEN
                (_item.invcost / (1.0 - ipsitem_discntprcnt) + ipsitem_fixedamtdiscount) * _iteminvpricerat
               WHEN (ipsitem_type = 'M' AND _wholesalepricecosting) THEN
                (_item.item_listcost + (_item.item_listcost * ipsitem_discntprcnt) + ipsitem_fixedamtdiscount) * _iteminvpricerat
@@ -116,9 +116,9 @@ BEGIN
                  (ipsitem_price * itemuomtouomratio(_item.item_id, pPriceUOM, ipsitem_price_uom_id))
                 WHEN (ipsitem_type = 'D') THEN
                  noNeg(_item.item_listprice - (_item.item_listprice * ipsitem_discntprcnt) - ipsitem_fixedamtdiscount) * _iteminvpricerat
-                WHEN ((ipsitem_type = 'M') AND (ipsitem_discntprcnt <= 0.5) AND _long30markups AND _wholesalepricecosting) THEN
+                WHEN ((ipsitem_type = 'M') AND _long30markups AND _wholesalepricecosting) THEN
                  (_item.item_listcost / (1.0 - ipsitem_discntprcnt) + ipsitem_fixedamtdiscount) * _iteminvpricerat
-                WHEN ((ipsitem_type = 'M') AND (ipsitem_discntprcnt <= 0.5) AND _long30markups) THEN
+                WHEN ((ipsitem_type = 'M') AND _long30markups) THEN
                  (_item.invcost / (1.0 - ipsitem_discntprcnt) + ipsitem_fixedamtdiscount) * _iteminvpricerat
                 WHEN (ipsitem_type = 'M' AND _wholesalepricecosting) THEN
                  (_item.item_listcost + (_item.item_listcost * ipsitem_discntprcnt) + ipsitem_fixedamtdiscount) * _iteminvpricerat

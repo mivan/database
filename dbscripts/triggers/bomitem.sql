@@ -2,7 +2,7 @@ SELECT dropIfExists('TRIGGER','bomitemTrigger');
 SELECT dropIfExists('FUNCTION','_bomitemTrigger()');
 
 CREATE OR REPLACE FUNCTION _bomitemBeforeTrigger() RETURNS TRIGGER AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
   _bomworksetid INTEGER;
@@ -28,19 +28,15 @@ BEGIN
     END IF;
 
     --  Make sure that the parent is not used in the component at some level
-    IF ( SELECT (item_type IN ('M', 'F'))
-         FROM item
-         WHERE (item_id=NEW.bomitem_item_id) ) THEN
-      SELECT indentedWhereUsed(NEW.bomitem_parent_item_id) INTO _bomworksetid;
-      SELECT bomwork_id INTO _bomworkid
-      FROM bomwork
-      WHERE ((bomwork_set_id=_bomworksetid)
-        AND  (bomwork_item_id=NEW.bomitem_item_id))
-      LIMIT 1;
-      IF (FOUND) THEN
-        PERFORM deleteBOMWorkset(_bomworksetid);
-        RAISE EXCEPTION 'BOM Item Parent is used by Component, BOM is recursive. [xtuple: createBOMItem, -2]';
-      END IF;
+    SELECT indentedWhereUsed(NEW.bomitem_parent_item_id) INTO _bomworksetid;
+    SELECT bomwork_id INTO _bomworkid
+    FROM bomwork
+    WHERE ((bomwork_set_id=_bomworksetid)
+      AND  (bomwork_item_id=NEW.bomitem_item_id))
+    LIMIT 1;
+    IF (FOUND) THEN
+      PERFORM deleteBOMWorkset(_bomworksetid);
+      RAISE EXCEPTION 'BOM Item Parent is used by Component, BOM is recursive. [xtuple: createBOMItem, -2]';
     END IF;
 
     PERFORM deleteBOMWorkset(_bomworksetid);
@@ -149,7 +145,7 @@ CREATE TRIGGER bomitemBeforeTrigger BEFORE INSERT OR UPDATE ON bomitem FOR EACH 
 
 
 CREATE OR REPLACE FUNCTION _bomitemAfterTrigger() RETURNS TRIGGER AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
 
@@ -244,7 +240,7 @@ CREATE TRIGGER bomitemAfterTrigger AFTER INSERT OR UPDATE ON bomitem FOR EACH RO
 
 
 CREATE OR REPLACE FUNCTION _bomitemBeforeDeleteTrigger() RETURNS TRIGGER AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
 BEGIN

@@ -1,5 +1,5 @@
 CREATE OR REPLACE FUNCTION _custTrigger () RETURNS TRIGGER AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple.
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple.
 -- See www.xtuple.com/CPAL for the full text of the software license.
 BEGIN
   IF NOT (checkPrivilege('MaintainCustomerMasters') OR
@@ -42,7 +42,7 @@ CREATE TRIGGER custTrigger BEFORE INSERT OR UPDATE ON custinfo
        FOR EACH ROW EXECUTE PROCEDURE _custTrigger();
 
 CREATE OR REPLACE FUNCTION _custAfterTrigger () RETURNS TRIGGER AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple.
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple.
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
   _cmnttypeid INTEGER;
@@ -93,20 +93,9 @@ BEGIN
   END IF;
 
   IF (TG_OP = 'INSERT') THEN
-  -- find the warehouse for which to create evntlog entries
-    SELECT usrpref_value  INTO _whsId
-    FROM usrpref
-    WHERE usrpref_username = getEffectiveXtUser()
-      AND usrpref_name = 'PreferredWarehouse';
-
-    INSERT INTO evntlog (evntlog_evnttime, evntlog_username,
-                         evntlog_evnttype_id, evntlog_ordtype,
-                         evntlog_ord_id, evntlog_warehous_id, evntlog_number)
-    SELECT DISTINCT CURRENT_TIMESTAMP, evntnot_username, evnttype_id,
-                    'C', NEW.cust_id, _whsId, NEW.cust_number
-    FROM evntnot, evnttype
-    WHERE ((evntnot_evnttype_id=evnttype_id)
-      AND  (evnttype_name='NewCustomer'));
+    PERFORM postEvent('NewCustomer', 'C', NEW.cust_id,
+                      NULL, NEW.cust_number,
+                      NULL, NULL, NULL, NULL);
   END IF;
 
   IF (fetchMetricBool('CustomerChangeLog')) THEN
@@ -207,7 +196,7 @@ CREATE TRIGGER custAfterTrigger AFTER INSERT OR UPDATE ON custinfo
        FOR EACH ROW EXECUTE PROCEDURE _custAfterTrigger();
 
 CREATE OR REPLACE FUNCTION _custinfoBeforeDeleteTrigger() RETURNS TRIGGER AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple.
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple.
 -- See www.xtuple.com/CPAL for the full text of the software license.
 BEGIN
   IF NOT (checkPrivilege('MaintainCustomerMasters')) THEN
@@ -226,7 +215,7 @@ CREATE TRIGGER custinfoBeforeDeleteTrigger BEFORE DELETE ON custinfo
        FOR EACH ROW EXECUTE PROCEDURE _custinfoBeforeDeleteTrigger();
 
 CREATE OR REPLACE FUNCTION _custinfoAfterDeleteTrigger() RETURNS TRIGGER AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple.
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple.
 -- See www.xtuple.com/CPAL for the full text of the software license.
 BEGIN
   -- handle transitory state when converting customer to prospect

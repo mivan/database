@@ -7,7 +7,7 @@
 --        Then the outer query modifies the sourcecode to indicate
 --        item vs product category.
 --        TODO: possible improvements include removing OUTER JOINs with uom table
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple.
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple.
 -- See www.xtuple.com/CPAL for the full text of the software license.
 
 SELECT sourcecode + CASE WHEN source='P' THEN 10 ELSE 0 END AS source,
@@ -51,7 +51,7 @@ FROM (
                  (ipsitem_price * itemuomtouomratio(<? value('item_id') ?>, NULL, ipsitem_price_uom_id)) * iteminvpricerat(ipsitem_item_id)
                 WHEN (ipsitem_type = 'D') THEN
                  noNeg(<? value('item_listprice') ?> - (<? value('item_listprice') ?> * ipsitem_discntprcnt) - ipsitem_fixedamtdiscount)
-                WHEN ((ipsitem_type = 'M') AND (ipsitem_discntprcnt <= 0.5) AND fetchMetricBool('Long30Markups')) THEN
+                WHEN ((ipsitem_type = 'M') AND fetchMetricBool('Long30Markups')) THEN
                  (<? value('item_unitcost') ?> / (1.0 - ipsitem_discntprcnt) + ipsitem_fixedamtdiscount)
                 WHEN (ipsitem_type = 'M') THEN
                  (<? value('item_unitcost') ?> + (<? value('item_unitcost') ?> * ipsitem_discntprcnt) + ipsitem_fixedamtdiscount)
@@ -104,7 +104,7 @@ FROM (
            CASE WHEN ipsitem_type = 'N' THEN (ipsitem_price * itemuomtouomratio(<? value('item_id') ?>, NULL, ipsitem_price_uom_id)) *
                                               iteminvpricerat(ipsitem_item_id)
                 WHEN ipsitem_type = 'D' THEN noNeg(<? value('item_listprice') ?> - (<? value('item_listprice') ?> * ipsitem_discntprcnt) - ipsitem_fixedamtdiscount)
-                WHEN ((ipsitem_type = 'M') AND (ipsitem_discntprcnt <= 0.5) AND fetchMetricBool('Long30Markups')) THEN
+                WHEN ((ipsitem_type = 'M') AND fetchMetricBool('Long30Markups')) THEN
                  (<? value('item_unitcost') ?> / (1.0 - ipsitem_discntprcnt) + ipsitem_fixedamtdiscount)
                 WHEN (ipsitem_type = 'M') THEN
                  (<? value('item_unitcost') ?> + (<? value('item_unitcost') ?> * ipsitem_discntprcnt) + ipsitem_fixedamtdiscount)

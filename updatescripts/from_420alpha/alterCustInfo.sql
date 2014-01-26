@@ -1,0 +1,1 @@
+ALTER TABLE custinfo ADD COLUMN cust_statementcycle text;

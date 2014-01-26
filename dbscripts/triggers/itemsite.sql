@@ -1,5 +1,5 @@
 CREATE OR REPLACE FUNCTION _itemsiteTrigger () RETURNS TRIGGER AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
   _cmnttypeid INTEGER;
@@ -30,19 +30,13 @@ BEGIN
       END IF;
 
       IF ( (NEW.itemsite_qtyonhand < 0) AND (OLD.itemsite_qtyonhand >= 0) AND (NEW.itemsite_eventfence > 0) ) THEN
-        INSERT INTO evntlog
-        ( evntlog_evnttime, evntlog_username, evntlog_evnttype_id,
-          evntlog_ordtype, evntlog_ord_id, evntlog_warehous_id,
-          evntlog_number )
-        SELECT CURRENT_TIMESTAMP, evntnot_username, evnttype_id,
-               'I', NEW.itemsite_id, warehous_id,
-               (item_number || '/' || warehous_code)
-        FROM evntnot, evnttype, item, whsinfo
-        WHERE ( (evntnot_evnttype_id=evnttype_id)
-         AND (evntnot_warehous_id=NEW.itemsite_warehous_id)
-         AND (NEW.itemsite_item_id=item_id)
-         AND (NEW.itemsite_warehous_id=warehous_id)
-         AND (evnttype_name='QOHBelowZero') );
+        PERFORM postEvent('QOHBelowZero', 'I', NEW.itemsite_id,
+                          warehous_id,
+                          (item_number || '/' || warehous_code),
+                          NULL, NULL, NULL, NULL)
+        FROM item, whsinfo
+        WHERE (item_id=NEW.itemsite_item_id)
+          AND (warehous_id=NEW.itemsite_warehous_id);
       END IF;
     END IF;
     IF ( (NEW.itemsite_value <> OLD.itemsite_value) AND (OLD.itemsite_freeze) ) THEN
@@ -138,7 +132,7 @@ SELECT dropIfExists('trigger', 'itemsiteTrigger');
 CREATE TRIGGER itemsiteTrigger BEFORE INSERT OR UPDATE ON itemsite FOR EACH ROW EXECUTE PROCEDURE _itemsiteTrigger();
 
 CREATE OR REPLACE FUNCTION _itemsiteAfterTrigger () RETURNS TRIGGER AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
   _state INTEGER;
@@ -184,6 +178,11 @@ BEGIN
      OR (OLD.itemsite_sold              != NEW.itemsite_sold)
      OR (OLD.itemsite_stocked           != NEW.itemsite_stocked)
      OR (OLD.itemsite_location_id       != NEW.itemsite_location_id)
+     OR (OLD.itemsite_recvlocation_id   != NEW.itemsite_recvlocation_id)
+     OR (OLD.itemsite_issuelocation_id  != NEW.itemsite_issuelocation_id)
+     OR (OLD.itemsite_location_dist     != NEW.itemsite_location_dist)
+     OR (OLD.itemsite_recvlocation_dist != NEW.itemsite_recvlocation_dist)
+     OR (OLD.itemsite_issuelocation_dist != NEW.itemsite_issuelocation_dist)
      OR (OLD.itemsite_useparams         != NEW.itemsite_useparams)
      OR (OLD.itemsite_useparamsmanual   != NEW.itemsite_useparamsmanual)
      OR (OLD.itemsite_soldranking       != NEW.itemsite_soldranking)
@@ -258,6 +257,13 @@ BEGIN
     END IF;
     
 -- Integrity check
+
+    -- Both insert and update
+    IF ( (NEW.itemsite_controlmethod IN ('S', 'L')) AND
+         (NEW.itemsite_location_dist OR NEW.itemsite_recvlocation_dist OR NEW.itemsite_issuelocation_dist) ) THEN
+      RAISE EXCEPTION 'You cannot auto-distribute Lot/Serial controlled Item Sites.';
+    END IF;
+
     IF (TG_OP = 'INSERT') THEN
       -- Handle MLC logic
       IF ( (NEW.itemsite_loccntrl) AND (NEW.itemsite_warehous_id IS NOT NULL) ) THEN
@@ -344,7 +350,7 @@ BEGIN
       IF ( (_application = 'Standard') AND (_state IN (41, 43, 14, 34, 24, 42, 44)) ) THEN
         -- Check for Reservations
         IF (SELECT COUNT(*) > 0
-            FROM itemloc JOIN itemlocrsrv ON (itemlocrsrv_itemloc_id=itemloc_id)
+            FROM itemloc JOIN reserve ON (reserve_supply_id=itemloc_id AND reserve_supply_type='I')
             WHERE (itemloc_itemsite_id=OLD.itemsite_id)) THEN
           RAISE EXCEPTION 'Sales Order Reservations by Location exist for this Item Site';
         END IF;

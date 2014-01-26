@@ -1,6 +1,6 @@
 
 CREATE OR REPLACE FUNCTION deleteSoItem(INTEGER) RETURNS INTEGER AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
   pSoitemid	ALIAS FOR $1;
@@ -114,6 +114,11 @@ BEGIN
       _deletePO := _deletePO - 1;
     END IF;
   END IF;
+
+-- Delete characteristic assignments
+  DELETE FROM charass
+  WHERE (charass_target_type='SI')
+    AND (charass_target_id=pSoitemid);
 
 -- Delete the coitem
   DELETE FROM coitem

@@ -1,4 +1,4 @@
-/*
+
 DROP VIEW IF EXISTS api.quoteline;
 DROP FUNCTION IF EXISTS itemPrice(pItemid INTEGER,
                                      pCustid INTEGER,
@@ -44,7 +44,7 @@ DROP FUNCTION IF EXISTS itemIpsPrice(pItemid INTEGER,
                                         pEffective DATE,
                                         pAsOf DATE,
                                         pSiteid INTEGER);
-*/
+
 DROP TYPE IF EXISTS itemprice;
 CREATE TYPE itemprice AS (itemprice_price     NUMERIC,
                           itemprice_type      CHAR(1)
