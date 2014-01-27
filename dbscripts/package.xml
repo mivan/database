@@ -54,6 +54,7 @@
   <createfunction file="functions/asofinvbal.sql"                     name="asofinvbal" />
   <createfunction file="functions/asofinvnn.sql"                      name="asofinvnn" />
   <createfunction file="functions/asofinvqty.sql"                     name="asofinvqty" />
+  <createfunction file="functions/assessfinancecharge.sql"            name="assessfinancecharge" />
   <createfunction file="functions/attachcontact.sql"                  name="attachcontact" />
   <createfunction file="functions/attachquotetoopportunity.sql"       name="attachquotetoopportunity" />
   <createfunction file="functions/attachsalesordertoopportunity.sql"  name="attachsalesordertoopportunity" />
@@ -1002,6 +1003,7 @@
   <loadmetasql file="metasql/arOpenApplications-detail.mql" />
   <loadmetasql file="metasql/arOpenItems-detail.mql" />
   <loadmetasql file="metasql/arOpenItems-f_detail.mql" />
+  <loadmetasql file="metasql/assessFinanceCharges_detail.mql" />
   <loadmetasql file="metasql/backlog-detail.mql" />
   <loadmetasql file="metasql/bankrec-checks.mql" />
   <loadmetasql file="metasql/bankrec-clearedbalance.mql" />
