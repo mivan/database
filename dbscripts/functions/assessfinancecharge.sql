@@ -180,6 +180,11 @@ BEGIN
       FALSE,
       _fc.fincharg_accnt_id );
 
+  -- update aropen
+  UPDATE aropen SET aropen_fincharg_date = pAssessDate,
+                    aropen_fincharg_amount = COALESCE(aropen_fincharg_amount, 0.0) + pAssessAmount
+  WHERE (aropen_id=pAropenid);
+
 
   RETURN 0;
 
