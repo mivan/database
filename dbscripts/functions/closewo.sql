@@ -25,15 +25,20 @@ DECLARE
 
 BEGIN
 
+  --Comment this out
+  --In addition to IssueToShipping driving PostProduction,
+  --not PostProduction can drive IssueToShipping.
+  --Must allow closing of Job items
+
   --If this is item type Job then we cannot close here
-  SELECT itemsite_costmethod INTO _check
-  FROM wo,itemsite
-  WHERE ((wo_id=pWoid)
-  AND (wo_itemsite_id=itemsite_id)
-  AND (itemsite_costmethod = 'J'));
-  IF (FOUND) THEN
-    RAISE EXCEPTION 'Work orders for Job items are closed when all quantities are shipped';
-  END IF;
+  --SELECT itemsite_costmethod INTO _check
+  --FROM wo,itemsite
+  --WHERE ((wo_id=pWoid)
+  --AND (wo_itemsite_id=itemsite_id)
+  --AND (itemsite_costmethod = 'J'));
+  --IF (FOUND) THEN
+  --  RAISE EXCEPTION 'Work orders for Job items are closed when all quantities are shipped';
+  --END IF;
 
   SELECT formatWoNumber(pWoid) INTO _woNumber;
 
