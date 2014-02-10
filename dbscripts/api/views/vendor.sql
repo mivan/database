@@ -300,9 +300,9 @@ UPDATE vendinfo SET
             NEW.address_change ),
   vend_match=NEW.matching_vo_po_amounts,
   vend_taxzone_id=getTaxZoneId(NEW.default_tax_zone),
-  vend_accnt_id=COALESCE(getGLAccntId(NEW.default_dist_gl_account), -1),
-  vend_expcat_id=COALESCE(getExpCatId(NEW.default_dist_expense_category), -1),
-  vend_tax_id=COALESCE(getTaxId(NEW.default_dist_tax_code), -1)
+  vend_accnt_id=COALESCE(getGLAccntId(NULLIF(NEW.default_dist_gl_account, 'N/A')), -1),
+  vend_expcat_id=COALESCE(getExpCatId(NULLIF(NEW.default_dist_expense_category, 'N/A')), -1),
+  vend_tax_id=COALESCE(getTaxId(NULLIF(NEW.default_dist_tax_code, 'N/A')), -1)
 WHERE vend_id=getVendId(OLD.vendor_number);
 
 CREATE OR REPLACE RULE "_DELETE" AS
