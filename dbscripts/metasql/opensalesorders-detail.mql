@@ -20,7 +20,10 @@ SELECT DISTINCT
 <? endforeach ?>
        firstline(cohead_ordercomments) AS notes,
        calcSalesOrderAmt(cohead_id) AS ordertotal,
-       (calcSalesOrderAmt(cohead_id,'M') / calcSalesOrderAmt(cohead_id,'S')) AS ordermarginpercent,
+       CASE WHEN (calcSalesOrderAmt(cohead_id,'S') != 0.0)
+              THEN (calcSalesOrderAmt(cohead_id,'M') / calcSalesOrderAmt(cohead_id,'S'))
+            ELSE 1.0
+       END AS ordermarginpercent,
        'percent' AS ordermarginpercent_xtnumericrole,
        'extprice' AS ordertotal_xtnumericrole
 FROM cohead 

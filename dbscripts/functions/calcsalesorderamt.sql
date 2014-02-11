@@ -40,7 +40,7 @@ BEGIN
     AND (coitem_status != 'X');
 
   IF (pType IN ('T', 'B', 'X')) THEN
-    SELECT ROUND(SUM(taxdetail_tax), 2) INTO _tax
+    SELECT COALESCE(ROUND(SUM(taxdetail_tax), 2), 0.0) INTO _tax
     FROM calculateTaxDetailSummary('S', pCoheadid, 'T');
   END IF;
 
