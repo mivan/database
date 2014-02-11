@@ -103,6 +103,7 @@ BEGIN
     FROM pohead
     WHERE ( (pohead_status = 'U')
       AND (pohead_vend_id = _i.itemsrc_vend_id)
+      AND (pohead_shiptoname = COALESCE(_s.cohead_shiptoname, _s.shipto_name, ''))
       AND (pohead_shiptoaddress1 = COALESCE(_s.cohead_shiptoaddress1, _s.addr_line1, ''))
       AND (pohead_shiptoaddress2 = COALESCE(_s.cohead_shiptoaddress2, _s.addr_line2, ''))
       AND (pohead_shiptoaddress3 = COALESCE(_s.cohead_shiptoaddress3, _s.addr_line3, ''))
@@ -145,6 +146,7 @@ BEGIN
           pohead_shipto_cntct_suffix, pohead_shipto_cntct_phone,
           pohead_shipto_cntct_title, pohead_shipto_cntct_fax, 
           pohead_shipto_cntct_email, pohead_shiptoaddress_id,
+          pohead_shiptoname,
           pohead_shiptoaddress1,
           pohead_shiptoaddress2,
           pohead_shiptoaddress3,
@@ -170,6 +172,7 @@ BEGIN
           COALESCE(_s.cohead_shipto_cntct_suffix, _s.cntct_suffix), COALESCE(_s.cohead_shipto_cntct_phone, _s.cntct_phone),
           COALESCE(_s.cohead_shipto_cntct_title, _s.cntct_title), COALESCE(_s.cohead_shipto_cntct_fax, _s.cntct_fax),
           COALESCE(_s.cohead_shipto_cntct_email, _s.cntct_email), COALESCE(_s.shipto_addr_id, _s.addr_id),
+          COALESCE(_s.cohead_shiptoname, _s.shipto_name, ''),
           COALESCE(_s.cohead_shiptoaddress1, _s.addr_line1, ''),
           COALESCE(_s.cohead_shiptoaddress2, _s.addr_line2, ''),
           COALESCE(_s.cohead_shiptoaddress3, _s.addr_line3, ''),
