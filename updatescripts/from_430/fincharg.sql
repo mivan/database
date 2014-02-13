@@ -1,3 +1,5 @@
+SELECT dropIfExists('TABLE', 'fincharg');
+
 CREATE TABLE fincharg
 (
   fincharg_id serial primary key,
