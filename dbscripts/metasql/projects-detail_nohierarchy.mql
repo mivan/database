@@ -18,7 +18,16 @@ SELECT prj.*, prjtask.*, crmacct_name, cntct_name,
        WHEN (prjtask_status='C') THEN 'Completed'
        ELSE 'Unknown' END AS task_status,
    (prjtask_hours_budget-prjtask_hours_actual) AS prjtask_hours_balance,         
-   (prjtask_exp_budget-prjtask_exp_actual) AS prjtask_exp_balance         
+   (prjtask_exp_budget-prjtask_exp_actual) AS prjtask_exp_balance
+<? foreach("char_id_text_list") ?>
+  , charass_alias<? literal("char_id_text_list") ?>.charass_value AS char<? literal("char_id_text_list") ?>
+<? endforeach ?>
+<? foreach("char_id_list_list") ?>
+  , charass_alias<? literal("char_id_list_list") ?>.charass_value AS char<? literal("char_id_list_list") ?>
+<? endforeach ?>
+<? foreach("char_id_date_list") ?>
+  , charass_alias<? literal("char_id_date_list") ?>.charass_value::date AS char<? literal("char_id_date_list") ?>
+<? endforeach ?>
 FROM prj() 
 JOIN prjtask ON (prj_id=prjtask_prj_id)
 LEFT JOIN prjtype ON (prj_prjtype_id=prjtype_id)
@@ -27,6 +36,24 @@ LEFT JOIN cntct ON (crmacct_cntct_id_1=cntct_id)
 LEFT JOIN addr ON (cntct_addr_id=addr_id)
 LEFT JOIN te.teprjtask ON (prjtask_id=teprjtask_prjtask_id)
 LEFT JOIN custinfo ON (teprjtask_cust_id=cust_id)
+<? foreach("char_id_text_list") ?>
+  LEFT OUTER JOIN charass charass_alias<? literal("char_id_text_list") ?> ON ((charass_alias<? literal("char_id_text_list") ?>.charass_target_type='PROJ') 
+                                                                    AND  (charass_alias<? literal("char_id_text_list") ?>.charass_target_id=prj_id)
+                                                                    AND  (charass_alias<? literal("char_id_text_list") ?>.charass_char_id=<? value("char_id_text_list") ?>))
+  LEFT OUTER JOIN char char_alias<? literal("char_id_text_list") ?> ON (charass_alias<? literal("char_id_text_list") ?>.charass_char_id=char_alias<? literal("char_id_text_list") ?>.char_id)
+<? endforeach ?>
+<? foreach("char_id_list_list") ?>
+  LEFT OUTER JOIN charass charass_alias<? literal("char_id_list_list") ?> ON ((charass_alias<? literal("char_id_list_list") ?>.charass_target_type='PROJ') 
+                                                                    AND  (charass_alias<? literal("char_id_list_list") ?>.charass_target_id=prj_id)
+                                                                    AND  (charass_alias<? literal("char_id_list_list") ?>.charass_char_id=<? value("char_id_list_list") ?>))
+  LEFT OUTER JOIN char char_alias<? literal("char_id_list_list") ?> ON (charass_alias<? literal("char_id_list_list") ?>.charass_char_id=char_alias<? literal("char_id_list_list") ?>.char_id)
+<? endforeach ?>
+<? foreach("char_id_date_list") ?>
+  LEFT OUTER JOIN charass charass_alias<? literal("char_id_date_list") ?> ON ((charass_alias<? literal("char_id_date_list") ?>.charass_target_type='PROJ') 
+                                                                    AND  (charass_alias<? literal("char_id_date_list") ?>.charass_target_id=prj_id)
+                                                                    AND  (charass_alias<? literal("char_id_date_list") ?>.charass_char_id=<? value("char_id_date_list") ?>))
+  LEFT OUTER JOIN char char_alias<? literal("char_id_date_list") ?> ON (charass_alias<? literal("char_id_date_list") ?>.charass_char_id=char_alias<? literal("char_id_date_list") ?>.char_id)
+<? endforeach ?>
 WHERE (true)
 <? if exists("search_pattern") ?>
    AND ( (prj_number ~* <? value("search_pattern") ?>)
@@ -82,4 +109,5 @@ WHERE (true)
 <? if exists("id") ?>
   AND (prj_id=<? value("id") ?>)
 <? endif ?>
+<? literal("charClause") ?>
 ORDER BY prj_number;
