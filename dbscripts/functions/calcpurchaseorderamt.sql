@@ -34,7 +34,7 @@ BEGIN
   WHERE (poitem_pohead_id=pPoheadid);
 
   SELECT COALESCE(SUM(tax), 0) INTO _tax
-  FROM ( SELECT ROUND(SUM(taxdetail_tax), 2) AS tax
+  FROM ( SELECT COALESCE(ROUND(SUM(taxdetail_tax), 2), 0.0) AS tax
          FROM tax JOIN calculateTaxDetailSummary('PO', pPoheadid, 'T') ON (taxdetail_tax_id=tax_id)
          GROUP BY tax_id ) AS data;
 

@@ -37,7 +37,7 @@ BEGIN
   WHERE (invcitem_invchead_id=pInvcheadid);
 
   IF (pType IN ('T', 'X')) THEN
-    SELECT ROUND(SUM(taxdetail_tax), 2) INTO _tax
+    SELECT COALESCE(ROUND(SUM(taxdetail_tax), 2), 0.0) INTO _tax
     FROM calculateTaxDetailSummary('I', pInvcheadid, 'T');
   END IF;
 

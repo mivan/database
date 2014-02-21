@@ -36,7 +36,7 @@ BEGIN
   WHERE (quitem_quhead_id=pQuheadid);
 
   IF (pType IN ('T', 'X')) THEN
-    SELECT ROUND(SUM(taxdetail_tax), 2) INTO _tax
+    SELECT COALESCE(ROUND(SUM(taxdetail_tax), 2), 0.0) INTO _tax
     FROM calculateTaxDetailSummary('Q', pQuheadid, 'T');
   END IF;
 
