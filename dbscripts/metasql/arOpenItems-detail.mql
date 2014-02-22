@@ -121,7 +121,7 @@ SELECT -1 AS id,
        NULL::date AS aropen_duedate,
        NULL::text AS ordernumber,
        -1 AS ordernumber_xtidrole,
-       <? value("creditMemo") ?>  AS doctype,
+       <? value("return") ?>  AS doctype,
        CASE WHEN (NOT cmhead_posted) THEN 'emphasis'
        END AS doctype_qtforegroundrole,
        creditmemototal(cmhead_id) AS amount,
