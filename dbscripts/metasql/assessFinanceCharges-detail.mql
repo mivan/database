@@ -33,6 +33,7 @@ FROM fincharg,
       WHERE ((aropen_doctype='I')
         AND  (aropen_open)
         AND  (COALESCE(terms_fincharg, FALSE))
+        AND  (COALESCE(cust_financecharge, TRUE))
       <? if exists("cust_id") ?>
         AND   (aropen_cust_id=<? value("cust_id") ?>)
       <? endif ?>
