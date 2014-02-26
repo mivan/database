@@ -56,9 +56,14 @@ BEGIN
   END LOOP;
 
   UPDATE orderseq SET 
-    orderseq_number = _nextnum,
-    orderseq_seqiss = orderseq_seqiss || _seqiss
+    orderseq_number = _nextnum
   WHERE (orderseq_name=psequence);
+
+  IF (fetchMetricBool('EnableGaplessNumbering')) THEN
+    UPDATE orderseq SET 
+      orderseq_seqiss = orderseq_seqiss || _seqiss
+    WHERE (orderseq_name=psequence);
+  END IF;
 
   RETURN _number;
 

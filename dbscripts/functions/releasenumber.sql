@@ -5,8 +5,10 @@ DECLARE
   psequence	ALIAS FOR $1;
   pnumber 	ALIAS FOR $2;
 BEGIN
-  -- drop the number back into the pool if it was not committed
-  PERFORM clearNumberIssue(psequence, pnumber);
+  IF (fetchMetricBool('EnableGaplessNumbering')) THEN
+    -- drop the number back into the pool if it was not committed
+    PERFORM clearNumberIssue(psequence, pnumber);
+  END IF;
   
   UPDATE orderseq SET
     orderseq_number = LEAST(pnumber, orderseq_number)
