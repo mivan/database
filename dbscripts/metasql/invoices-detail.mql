@@ -29,7 +29,10 @@ SELECT invchead_id, cust_id,
          invchead_invcnumber AS docnumber,
          findCustomerForm(cust_id, 'I') AS reportname,
        <? endif ?>
-       (calcInvoiceAmt(invchead_id,'M') / calcInvoiceAmt(invchead_id,'S')) AS marginpercent,
+       CASE WHEN (calcInvoiceAmt(invchead_id,'S') != 0.0)
+              THEN (calcInvoiceAmt(invchead_id,'M') / calcInvoiceAmt(invchead_id,'S'))
+            ELSE 1.0
+       END AS marginpercent,
        'percent' AS marginpercent_xtnumericrole,
        'curr' AS extprice_xtnumericrole,
        'curr' AS balance_xtnumericrole,
