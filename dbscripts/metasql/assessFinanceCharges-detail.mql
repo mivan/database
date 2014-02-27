@@ -47,5 +47,5 @@ FROM fincharg,
         AND   (custgrpitem_custgrp_id=<? value("custgrp_id") ?>)
       <? endif ?>
       )) AS data
-WHERE ((COALESCE(aropen_fincharg_date, aropen_duedate) + fincharg_graceperiod) < <? value("assessmentDate") ?>)
+WHERE ((COALESCE(aropen_fincharg_date, aropen_duedate) + COALESCE(cust_gracedays, fincharg_graceperiod)) < <? value("assessmentDate") ?>)
 ORDER BY cust_number, aropen_docnumber;
