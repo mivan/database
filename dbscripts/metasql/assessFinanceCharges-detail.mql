@@ -33,6 +33,7 @@ FROM fincharg,
       WHERE ((aropen_doctype='I')
         AND  (aropen_open)
         AND  (COALESCE(terms_fincharg, FALSE))
+        AND  (COALESCE(cust_financecharge, TRUE))
       <? if exists("cust_id") ?>
         AND   (aropen_cust_id=<? value("cust_id") ?>)
       <? endif ?>
@@ -46,5 +47,5 @@ FROM fincharg,
         AND   (custgrpitem_custgrp_id=<? value("custgrp_id") ?>)
       <? endif ?>
       )) AS data
-WHERE ((COALESCE(aropen_fincharg_date, aropen_duedate) + fincharg_graceperiod) < <? value("assessmentDate") ?>)
+WHERE ((COALESCE(aropen_fincharg_date, aropen_duedate) + COALESCE(cust_gracedays, fincharg_graceperiod)) < <? value("assessmentDate") ?>)
 ORDER BY cust_number, aropen_docnumber;
