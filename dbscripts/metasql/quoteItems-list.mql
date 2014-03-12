@@ -25,7 +25,7 @@ SELECT quitem_id,
        ROUND((quitem_qtyord * quitem_qty_invuomratio) *
              ((quitem_price / quitem_price_invuomratio) - quitem_unitcost),2) AS margin,
        CASE WHEN (quitem_price = 0.0) THEN 100.0
-            ELSE (((quitem_price - quitem_unitcost) / quitem_price) * 100.0)
+            ELSE ((quitem_price - quitem_unitcost) / quitem_price)
        END AS marginpercent,
        CASE WHEN (quitem_custpn != '') THEN quitem_custpn
             ELSE item_number
