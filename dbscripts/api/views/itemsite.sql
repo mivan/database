@@ -45,6 +45,11 @@ AS
      itemsite_eventfence AS event_fence,
      itemsite_loccntrl AS multiple_location_control,
      formatlocationname(itemsite_location_id) AS location,
+     formatlocationname(itemsite_recvlocation_id) AS receive_location,
+     formatlocationname(itemsite_issuelocation_id) AS issue_location,
+     itemsite_location_dist AS auto_distr_location,
+     itemsite_recvlocation_dist AS auto_distr_receive_location,
+     itemsite_issuelocation_dist AS auto_distr_issue_location,
      itemsite_location AS user_defined_location,
      itemsite_location_comments AS location_comment,
      itemsite_disallowblankwip AS disallow_blank_wip_locations,
@@ -75,13 +80,10 @@ AS
      itemsite_perishable AS perishable,
      itemsite_warrpurc AS require_warranty,
      itemsite_autoreg AS auto_register
-   FROM item, itemsite
-     LEFT OUTER JOIN location ON (itemsite_location_id=location_id),
-     plancode,costcat,whsinfo
-   WHERE ((item_id=itemsite_item_id)
-   AND (itemsite_plancode_id=plancode_id)
-   AND (itemsite_costcat_id=costcat_id)
-   AND (itemsite_warehous_id=warehous_id));     
+   FROM itemsite JOIN item ON (item_id=itemsite_item_id)
+                 JOIN plancode ON (plancode_id=itemsite_plancode_id)
+                 JOIN costcat ON (costcat_id=itemsite_costcat_id)
+                 JOIN whsinfo ON (warehous_id=itemsite_warehous_id);
 
 GRANT ALL ON TABLE api.itemsite TO xtrole;
 COMMENT ON VIEW api.itemsite IS 'Item Site';
@@ -111,6 +113,11 @@ INSERT INTO itemsite (
      itemsite_costcat_id,
      itemsite_loccntrl,
      itemsite_location_id,
+     itemsite_recvlocation_id,
+     itemsite_issuelocation_id,
+     itemsite_location_dist,
+     itemsite_recvlocation_dist,
+     itemsite_issuelocation_dist,
      itemsite_location,
      itemsite_location_comments,
      itemsite_disallowblankwip,
@@ -177,6 +184,11 @@ INSERT INTO itemsite (
        getCostCatId(NEW.cost_category),
        COALESCE(NEW.multiple_location_control,FALSE),
        COALESCE(getLocationId(NEW.site,NEW.location),-1),
+       COALESCE(getLocationId(NEW.site,NEW.receive_location),-1),
+       COALESCE(getLocationId(NEW.site,NEW.issue_location),-1),
+       COALESCE(NEW.auto_distr_location,FALSE),
+       COALESCE(NEW.auto_distr_receive_location,FALSE),
+       COALESCE(NEW.auto_distr_issue_location,FALSE),
        COALESCE(NEW.user_defined_location,''),
        COALESCE(NEW.location_comment,''),
        COALESCE(NEW.disallow_blank_wip_locations,FALSE),
@@ -267,6 +279,23 @@ UPDATE itemsite SET
        ELSE
          getLocationId(NEW.site,NEW.location)
      END,
+     itemsite_recvlocation_id=
+     CASE
+       WHEN (NEW.receive_location = 'N/A') THEN
+         -1
+       ELSE
+         getLocationId(NEW.site,NEW.receive_location)
+     END,
+     itemsite_issuelocation_id=
+     CASE
+       WHEN (NEW.issue_location = 'N/A') THEN
+         -1
+       ELSE
+         getLocationId(NEW.site,NEW.issue_location)
+     END,
+     itemsite_location_dist=NEW.auto_distr_location,
+     itemsite_recvlocation_dist=NEW.auto_distr_receive_location,
+     itemsite_issuelocation_dist=NEW.auto_distr_issue_location,
      itemsite_location=NEW.user_defined_location,
      itemsite_location_comments=NEW.user_defined_location,
      itemsite_disallowblankwip=NEW.disallow_blank_wip_locations,

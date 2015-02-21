@@ -1,7 +1,7 @@
 -- Group: shipments
 -- Name: detail
 -- Notes: used by dspShipmentsByDate, dspShipmentsBySalesOrder, dspShipmentsByShipment
---        Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple.
+--        Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple.
 --        See www.xtuple.com/CPAL for the full text of the software license.
 
 SELECT shiphead_id, lineitem_id,
@@ -38,7 +38,8 @@ SELECT shiphead_id, lineitem_id,
        CASE WHEN (COALESCE(shiphead_freight, 0) = 0) THEN '' END AS shiphead_freight_qtdisplayrole,
        level AS xtindentrole
 FROM (
-SELECT shiphead_id, -1 AS lineitem_id, cohead_number AS sortkey1, shiphead_number AS sortkey2, 0 AS level,
+SELECT DISTINCT
+       shiphead_id, -1 AS lineitem_id, cohead_number AS sortkey1, shiphead_number AS sortkey2, 0 AS level,
        shiphead_order_type,
        shiphead_number,
        cohead_number AS order_number, 
@@ -53,13 +54,22 @@ SELECT shiphead_id, -1 AS lineitem_id, cohead_number AS sortkey1, shiphead_numbe
        0 AS qtyord,
        0 AS qtyshipped,
        firstline(shiphead_notes) AS notes
-FROM shiphead, cohead, custinfo
+FROM shiphead JOIN cohead ON (cohead_id=shiphead_order_id)
+              JOIN custinfo ON (cust_id=cohead_cust_id)
+<? if exists("warehous_id") ?>
+              JOIN shipitem ON (shipitem_shiphead_id=shiphead_id)
+              JOIN coitem ON (coitem_id=shipitem_orderitem_id)
+              JOIN itemsite ON (itemsite_id=coitem_itemsite_id)
+<? endif ?>
 WHERE ( (shiphead_order_id=cohead_id)
  AND (cohead_cust_id=cust_id)
  AND (shiphead_shipped)
  AND (shiphead_order_type='SO')
 <? if exists("startDate") ?>
  AND (shiphead_shipdate BETWEEN <? value("startDate") ?> and <? value("endDate") ?>)
+<? endif ?>
+<? if exists("warehous_id") ?>
+ AND (itemsite_warehous_id = <? value("warehous_id") ?>)
 <? endif ?>
 <? if exists("sohead_id") ?>
  AND (cohead_id = <? value("sohead_id") ?>)
@@ -98,6 +108,9 @@ WHERE ( (shipitem_shiphead_id=shiphead_id)
 <? if exists("startDate") ?>
  AND (shiphead_shipdate BETWEEN <? value("startDate") ?> and <? value("endDate") ?>)
 <? endif ?>
+<? if exists("warehous_id") ?>
+ AND (itemsite_warehous_id = <? value("warehous_id") ?>)
+<? endif ?>
 <? if exists("sohead_id") ?>
  AND (cohead_id = <? value("sohead_id") ?>)
 <? endif ?>
@@ -134,6 +147,9 @@ WHERE ( (shiphead_order_id=tohead_id)
 <? if exists("startDate") ?>
  AND (shiphead_shipdate BETWEEN <? value("startDate") ?> and <? value("endDate") ?>)
 <? endif ?>
+<? if exists("warehous_id") ?>
+ AND (tohead_src_warehous_id = <? value("warehous_id") ?>)
+<? endif ?>
 <? if exists("tohead_id") ?>
  AND (tohead_id = <? value("tohead_id") ?>)
 <? endif ?>
@@ -167,6 +183,9 @@ WHERE ( (shipitem_shiphead_id=shiphead_id)
  AND (shiphead_order_type='TO')
 <? if exists("startDate") ?>
  AND (shiphead_shipdate BETWEEN <? value("startDate") ?> and <? value("endDate") ?>)
+<? endif ?>
+<? if exists("warehous_id") ?>
+ AND (tohead_src_warehous_id = <? value("warehous_id") ?>)
 <? endif ?>
 <? if exists("tohead_id") ?>
  AND (tohead_id = <? value("tohead_id") ?>)

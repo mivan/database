@@ -1,6 +1,6 @@
 
 CREATE OR REPLACE FUNCTION _soheadTrigger() RETURNS TRIGGER AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
   _p RECORD;
@@ -485,7 +485,10 @@ BEGIN
         OR (OLD.cohead_freight != NEW.cohead_freight)
         OR (OLD.cohead_shipvia != NEW.cohead_shipvia)) THEN
       UPDATE shiphead SET 
-        shiphead_shipchrg_id=NEW.cohead_shipchrg_id,
+        shiphead_shipchrg_id=
+	     CASE WHEN (NEW.cohead_shipchrg_id <= 0) THEN NULL
+	          ELSE NEW.cohead_shipchrg_id
+	     END,
         shiphead_freight=NEW.cohead_freight,
         shiphead_shipvia=NEW.cohead_shipvia
       WHERE ((shiphead_order_type='SO')
@@ -509,7 +512,7 @@ DROP TRIGGER soheadTrigger ON cohead;
 CREATE TRIGGER soheadTrigger BEFORE INSERT OR UPDATE OR DELETE ON cohead FOR EACH ROW EXECUTE PROCEDURE _soheadTrigger();
 
 CREATE OR REPLACE FUNCTION _soheadTriggerAfter() RETURNS TRIGGER AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 BEGIN
   IF (COALESCE(NEW.cohead_taxzone_id,-1) <> COALESCE(OLD.cohead_taxzone_id,-1)) THEN

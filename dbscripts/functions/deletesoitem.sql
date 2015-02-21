@@ -1,6 +1,6 @@
 
 CREATE OR REPLACE FUNCTION deleteSoItem(INTEGER) RETURNS INTEGER AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
   pSoitemid	ALIAS FOR $1;
@@ -119,6 +119,13 @@ BEGIN
   DELETE FROM charass
   WHERE (charass_target_type='SI')
     AND (charass_target_id=pSoitemid);
+
+-- Delete reservations
+  IF (fetchMetricBool('EnableSOReservationsByLocation')) THEN
+    DELETE FROM reserve
+    WHERE (reserve_demand_type='SO')
+      AND (reserve_demand_id=pSoitemid);
+  END IF;
 
 -- Delete the coitem
   DELETE FROM coitem

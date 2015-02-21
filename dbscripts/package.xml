@@ -54,6 +54,7 @@
   <createfunction file="functions/asofinvbal.sql"                     name="asofinvbal" />
   <createfunction file="functions/asofinvnn.sql"                      name="asofinvnn" />
   <createfunction file="functions/asofinvqty.sql"                     name="asofinvqty" />
+  <createfunction file="functions/assessfinancecharge.sql"            name="assessfinancecharge" />
   <createfunction file="functions/attachcontact.sql"                  name="attachcontact" />
   <createfunction file="functions/attachquotetoopportunity.sql"       name="attachquotetoopportunity" />
   <createfunction file="functions/attachsalesordertoopportunity.sql"  name="attachsalesordertoopportunity" />
@@ -74,6 +75,7 @@
   <createfunction file="functions/calcbillingamts.sql"                name="calccobillamt" />
   <createfunction file="functions/calccashbudget.sql"                 name="calccashbudget" />
   <createfunction file="functions/calccreditmemoamts.sql"             name="calccmheadamt" />
+  <createfunction file="functions/calcinvoiceamt.sql"                 name="calcinvoiceamt" />
   <createfunction file="functions/calcpendingarapplications.sql"      name="calcpendingarapplications" />
   <createfunction file="functions/calcquoteamt.sql"                   name="calcquoteamt" />
   <createfunction file="functions/calcsalesorderamt.sql"              name="calcsalesorderamt" />
@@ -481,6 +483,7 @@
   <createfunction file="functions/getpacklistitemlotserial.sql"       name="getpacklistitemlotserial" />
   <createfunction file="functions/getperiodid.sql"                    name="getperiodid" />
   <createfunction file="functions/getpkgheadid.sql"                   name="getpkgheadid" />
+  <createfunction file="functions/getopenshipment.sql"                name="getopenshipment" />
   <createfunction file="functions/getplancodeid.sql"                  name="getplancodeid" />
   <createfunction file="functions/getpoheadid.sql"                    name="getpoheadid" />
   <createfunction file="functions/getpoitemid.sql"                    name="getpoitemid" />
@@ -490,6 +493,7 @@
   <createfunction file="functions/getprodcatid.sql"                   name="getprodcatid" />
   <createfunction file="functions/getprospectid.sql"                  name="getprospectid" />
   <createfunction file="functions/getquoteid.sql"                     name="getquoteid" />
+  <createfunction file="functions/getquotescheddate.sql"              name="getquotescheddate" />
   <createfunction file="functions/getquotelineitemid.sql"             name="getquotelineitemid" />
   <createfunction file="functions/getrevid.sql"                       name="getrevid" />
   <createfunction file="functions/getrsnid.sql"                       name="getrsnid" />
@@ -507,6 +511,7 @@
   <createfunction file="functions/getshipviaid.sql"                   name="getshipviaid" />
   <createfunction file="functions/getshipzoneid.sql"                  name="getshipzoneid" />
   <createfunction file="functions/getsitetypeid.sql"                  name="getsitetypeid" />
+  <createfunction file="functions/getsoitemstatus.sql"                name="getsoitemstatus" />
   <createfunction file="functions/getsoscheddate.sql"                 name="getsoscheddate" />
   <createfunction file="functions/getsostatus.sql"                    name="getsostatus" />
   <createfunction file="functions/getsubtax.sql"                      name="getsubtax" />
@@ -998,6 +1003,7 @@
   <loadmetasql file="metasql/arOpenApplications-detail.mql" />
   <loadmetasql file="metasql/arOpenItems-detail.mql" />
   <loadmetasql file="metasql/arOpenItems-f_detail.mql" />
+  <loadmetasql file="metasql/assessFinanceCharges_detail.mql" />
   <loadmetasql file="metasql/backlog-detail.mql" />
   <loadmetasql file="metasql/bankrec-checks.mql" />
   <loadmetasql file="metasql/bankrec-clearedbalance.mql" />
@@ -1100,6 +1106,7 @@
   <loadmetasql file="metasql/package-items.mql" />
   <loadmetasql file="metasql/packingList-getreport.mql" />
   <loadmetasql file="metasql/packingList-shipment.mql" />
+  <loadmetasql file="metasql/packingListBatch-clear.mql" />
   <loadmetasql file="metasql/packingListBatch-detail.mql" />
   <loadmetasql file="metasql/packingListBatch-print.mql" />
   <loadmetasql file="metasql/packingListBatchByShipVia-print.mql" />
@@ -1127,6 +1134,7 @@
   <loadmetasql file="metasql/purchaseOrders-detail.mql" />
   <loadmetasql file="metasql/qoh-detail.mql" />
   <loadmetasql file="metasql/quoteItems-detail.mql" />
+  <loadmetasql file="metasql/quoteItems-list.mql" />
   <loadmetasql file="metasql/quotes-detail.mql" />
   <loadmetasql file="metasql/receipt-detail.mql" />
   <loadmetasql file="metasql/receipt-receiveAll.mql" />

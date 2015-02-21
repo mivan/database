@@ -155,61 +155,8 @@ UPDATE crmacct SET
     CASE WHEN (NEW.type = 'Individual') THEN
            'I'
     ELSE 'O' END),
-    crmacct_cntct_id_1=         
-    saveCntct(
-          getCntctId(NEW.primary_contact_number),
-          NEW.primary_contact_number,
-          saveAddr(
-            getAddrId(NEW.primary_contact_address_number),
-            NEW.primary_contact_address_number,
-            NEW.primary_contact_address1,
-            NEW.primary_contact_address2,
-            NEW.primary_contact_address3,
-            NEW.primary_contact_city,
-            NEW.primary_contact_state,
-            NEW.primary_contact_postalcode,
-            NEW.primary_contact_country,
-            NEW.primary_contact_address_change),
-          NEW.primary_contact_honorific,
-          NEW.primary_contact_first,
-          NEW.primary_contact_middle,
-          NEW.primary_contact_last,
-          NEW.primary_contact_suffix,
-          NEW.primary_contact_voice,
-          NULL,
-          NEW.primary_contact_fax,
-          NEW.primary_contact_email,
-          NULL,
-          NEW.primary_contact_job_title,
-          NEW.primary_contact_change
-          ),
-    crmacct_cntct_id_2=
-          saveCntct(
-          getCntctId(NEW.secondary_contact_number),
-          NEW.secondary_contact_number,
-          saveAddr(
-            getAddrId(NEW.secondary_contact_address_number),
-            NEW.secondary_contact_address_number,
-            NEW.secondary_contact_address1,
-            NEW.secondary_contact_address2,
-            NEW.secondary_contact_address3,
-            NEW.secondary_contact_city,
-            NEW.secondary_contact_state,
-            NEW.secondary_contact_postalcode,
-            NEW.secondary_contact_country,
-            NEW.secondary_contact_address_change),
-          NEW.secondary_contact_honorific,
-          NEW.secondary_contact_first,
-          NEW.secondary_contact_middle,
-          NEW.secondary_contact_last,
-          NEW.secondary_contact_suffix,
-          NEW.secondary_contact_voice,
-          NULL,
-          NEW.secondary_contact_fax,
-          NEW.secondary_contact_email,
-          NULL,
-          NEW.secondary_contact_job_title,
-          NEW.secondary_contact_change),
+    crmacct_cntct_id_1=getCntctId(NEW.primary_contact_number),
+    crmacct_cntct_id_2=getCntctId(NEW.secondary_contact_number),
     crmacct_notes=NEW.notes
   WHERE (crmacct_number=OLD.account_number);
 

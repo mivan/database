@@ -1,7 +1,7 @@
 -- Group: opensalesorders
 -- Name:  detail
 -- Notes: 
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple.
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple.
 -- See www.xtuple.com/CPAL for the full text of the software license.
 
 SELECT DISTINCT
@@ -20,6 +20,11 @@ SELECT DISTINCT
 <? endforeach ?>
        firstline(cohead_ordercomments) AS notes,
        calcSalesOrderAmt(cohead_id) AS ordertotal,
+       CASE WHEN (calcSalesOrderAmt(cohead_id,'S') != 0.0)
+              THEN (calcSalesOrderAmt(cohead_id,'M') / calcSalesOrderAmt(cohead_id,'S'))
+            ELSE 1.0
+       END AS ordermarginpercent,
+       'percent' AS ordermarginpercent_xtnumericrole,
        'extprice' AS ordertotal_xtnumericrole
 FROM cohead 
      JOIN custinfo ON (cohead_cust_id=cust_id) 

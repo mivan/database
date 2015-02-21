@@ -1,6 +1,6 @@
 CREATE OR REPLACE FUNCTION checkDetailFormatted(INTEGER, INTEGER) RETURNS SETOF checkdata
 AS $$
--- Copyright (c) 1999-2012 by OpenMFG LLC, d/b/a xTuple. 
+-- Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
 -- See www.xtuple.com/CPAL for the full text of the software license.
 DECLARE
   pCheckheadid ALIAS FOR $1;
@@ -116,7 +116,7 @@ BEGIN
     formatMoney(checkitem_discount) AS disc_cred
   FROM checkitem, apopen
   WHERE ((checkitem_checkhead_id=pCheckheadid)
-    AND  (checkitem_vouchernumber = apopen_docnumber)
+    AND  (checkitem_apopen_id = apopen_id)
     AND  (apopen_doctype = 'D'))
   
   UNION
@@ -135,7 +135,7 @@ BEGIN
     formatMoney(checkitem_amount) AS disc_cred
   FROM checkitem, apopen
   WHERE ((checkitem_checkhead_id=pCheckheadid)
-    AND  (checkitem_vouchernumber = apopen_docnumber)
+    AND  (checkitem_apopen_id = apopen_id)
     AND  (apopen_doctype = 'C'))
   
   UNION
@@ -156,7 +156,9 @@ BEGIN
   FROM checkitem, vohead, apapply
   WHERE ((checkitem_checkhead_id=pCheckheadid)
     AND  (checkitem_vouchernumber = vohead_number)
-    AND  (apapply_target_docnumber = checkitem_vouchernumber ))
+    AND  (apapply_target_docnumber = checkitem_vouchernumber)
+    AND  (apapply_target_doctype = 'V')
+    AND  (apapply_source_doctype = 'C'))
   
   UNION 
   
@@ -177,7 +179,9 @@ BEGIN
   WHERE ((checkitem_checkhead_id=pCheckheadid)
     AND  (checkitem_vouchernumber = apopen_docnumber)
     AND  (apopen_doctype = 'D')
-    AND  (apapply_target_docnumber = checkitem_vouchernumber ))
+    AND  (apapply_target_docnumber = checkitem_vouchernumber)
+    AND  (apapply_target_doctype = 'D')
+    AND  (apapply_source_doctype = 'C'))
   
   UNION 
   
